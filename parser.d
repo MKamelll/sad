@@ -5,260 +5,342 @@ import std.variant;
 import std.algorithm;
 import std.exception;
 import std.stdio;
+import std.conv;
+import error;
 
-alias PrimaryVal = Lexeme;
+abstract class AstNode {
 
-class Expression {};
+    static class PrimaryNode : AstNode
+    {
+        Variant mVal;
 
-class Binary : Expression {
-    string op;
-    Expression lhs;
-    Expression rhs;
+        this(Variant val) {
+            mVal = val;
+        }
 
-    this(string op, Expression lhs, Expression rhs) {
-        this.op = op;
-        this.lhs = lhs;
-        this.rhs = rhs;
+        override string toString() {
+            return "Primary(" ~ mVal.toString() ~ ")";
+        }
+
     }
 
-    override string toString() {
-        return "Binary(op:'" ~ op ~ "'" ~ ", lhs:" ~ lhs.toString() ~ ", rhs:" ~ rhs.toString() ~ ")";
+    static class NumberNode : PrimaryNode
+    {
+        this(Variant val) {
+            super(val);
+        }
+
+        override string toString() {
+            return "Number(" ~ mVal.toString() ~ ")";
+        }
     }
 
-}
+    static class IdentifierNode : PrimaryNode
+    {
+        this(Variant val) {
+            super(val);
+        }
 
-class Primary : Expression {};
-
-class Number : Primary {
-    PrimaryVal val;
-
-    this (int val) {
-        this.val = PrimaryVal(val);
+        override string toString() {
+            return "Identifier(" ~ mVal.toString() ~ ")";
+        }
     }
 
-    this (float val) {
-        this.val = PrimaryVal(val);
+    static class BinaryNode : AstNode
+    {
+        string mOp;
+        AstNode mLhs;
+        AstNode mRhs;
+
+        this(string op, AstNode lhs, AstNode rhs) {
+            mOp = op;
+            mLhs = lhs;
+            mRhs = rhs;
+        }
+
+        override string toString() {
+            return "Binary(op: '" ~ mOp ~ "'" ~ ", lhs: " ~ mLhs.toString() ~ ", rhs: " ~ mRhs.toString() ~ ")";
+        }
+
     }
 
-    this (Lexeme val) {
-        this.val = val;
+    
+    static class PrefixNode : AstNode
+    {
+        string mOp;
+        AstNode mRhs;
+
+        this (string op, AstNode rhs) {
+            mOp = op;
+            mRhs = rhs;
+        }
+
+        override string toString() {
+            return "Prefix(op: '" ~ mOp ~ "', rhs: " ~ mRhs.toString() ~ ")";
+        }
     }
 
-    override string toString() {
-        return "Number(" ~ val.toString() ~ ")";
-    }
-}
+    
+    static class LetDefinitionNode : AstNode
+    {
+        AstNode mIdentifier;
+        AstNode mRhs;
 
-class Identifier : Primary {
-    PrimaryVal val;
+        this (AstNode identifier, AstNode rhs) {
+            mIdentifier = identifier;
+            mRhs = rhs;
+        }
 
-    this (string val) {
-        this.val = PrimaryVal(val);
-    }
-
-    this (Lexeme val) {
-        this.val = val;
-    }
-
-    override string toString() {
-        return "Identifier(" ~ val.toString() ~ ")";
-    }
-}
-
-class Prefix : Expression {
-    string op;
-    Expression rhs;
-
-    this (string op, Expression rhs) {
-        this.op = op;
-        this.rhs = rhs;
+        override string toString() {
+            return "Let(identifier: " ~ mIdentifier.toString() ~  ", rhs: " ~ mRhs.toString() ~ ")";
+        }
     }
 
-    override string toString() {
-        return "Prefix(op:'" ~ op ~ "', rhs:" ~ rhs.toString() ~ ")";
-    }
-}
+    static class LetDeclarationNode : AstNode
+    {
+        AstNode mIdentifier;
 
-class StmtExpr : Expression {}
+        this (AstNode identifier) {
+            mIdentifier = identifier;
+        }
 
-class Let : StmtExpr {
-    Expression rhs;
-
-    this (Expression rhs) {
-        this.rhs = rhs;
-    }
-
-    override string toString() {
-        return "Let(expr:" ~ rhs.toString() ~ ")";
-    }
-}
-
-class Const : StmtExpr {
-    Expression rhs;
-
-    this (Expression rhs) {
-        this.rhs = rhs;
+        override string toString() {
+            return "Let(identifier: " ~ mIdentifier.toString() ~ ")";
+        }
     }
 
-    override string toString() {
-        return "Const(expr:" ~ rhs.toString() ~ ")";
+    static class ConstDefinitionNode : AstNode
+    {
+        AstNode mIdentifier;
+        AstNode mRhs;
+
+        this (AstNode identifier, AstNode rhs) {
+            mIdentifier = identifier;
+            mRhs = rhs;
+        }
+
+        override string toString() {
+            return "Const(identifier: " ~ mIdentifier.toString() ~ ", rhs: " ~ mRhs.toString() ~ ")";
+        }
+    }
+
+    static class BlockNode : AstNode
+    {
+        AstNode[] mSubtree;
+
+        this (AstNode[] subtree) {
+            mSubtree = subtree;
+        }
+
+        override string toString() {
+            return "Block(" ~ to!string(mSubtree) ~ ")";
+        }
     }
 }
 
 enum Assoc {
-    Left, Right
+    Left, Right, None
 }
 
-class Parser : Expression {
+class OpInfo
+{
+    int mPrec;
+    Assoc mAssoc;
 
-    Tokenizer lex;
-    Expression[] exprs;
-    int[string] prec;
-    string[] right_assoc;
-    string[] prefix;
-    Token curr_token;
+    this(int prec, Assoc assoc) {
+        mPrec = prec;
+        mAssoc = assoc;
+    }
+}
+
+class Ast
+{
+
+    Tokenizer mLexer;
+    AstNode mRoot;
+    AstNode[] mSubtrees;
+    Token mCurrToken;
 
     this (Tokenizer lex) {
-        this.lex = lex;
-        this.prec = [   "=":  1,
-                        "==": 2,
-                        "!=": 2,
-                        ">":  3,
-                        ">=": 3,
-                        "<":  3,
-                        "<=": 3,
-
-                        "+": 4,
-                        "-": 4,
-                        "*": 5,
-                        "/": 5,
-                        "%": 5,
-                        "^": 6
-                        ];
-        this.prefix = ["!", "-", "+"];
-        this.right_assoc = ["^", "="];
-        this.curr_token = lex.next();
+        mLexer = lex;
+        mCurrToken = mLexer.next();
+        mSubtrees = [];
     }
 
-    Assoc getAssoc(Token token) {
-        if (right_assoc.canFind(token.lexeme.toString())) {
-            return Assoc.Right;
+    OpInfo getPrecAndAssoc(string op) {
+        switch (op) {
+            case "=":  return new OpInfo(1, Assoc.Right);
+            case "==": return new OpInfo(2, Assoc.Left);
+            case "!=": return new OpInfo(2, Assoc.Left);
+            case ">":  return new OpInfo(3, Assoc.Left);
+            case ">=": return new OpInfo(3, Assoc.Left);
+            case "<":  return new OpInfo(3, Assoc.Left);
+            case "<=": return new OpInfo(3, Assoc.Left);
+            case "+":  return new OpInfo(4, Assoc.Left);
+            case "-":  return new OpInfo(4, Assoc.Left);
+            case "*":  return new OpInfo(5, Assoc.Left);
+            case "/":  return new OpInfo(5, Assoc.Left);
+            case "%":  return new OpInfo(5, Assoc.Left);
+            case "^":  return new OpInfo(6, Assoc.Right);
+            default:   return new OpInfo(-1, Assoc.None);
         }
-
-        return Assoc.Left;
-    }
-
-    int getPrec(Token token) {
-        if (auto prec = token.lexeme.toString() in prec) {
-            return *prec;
-        }
-
-        return -1;
     }
 
     void advance() {
-        curr_token = lex.next();
+        mCurrToken = mLexer.next();
     }
 
-    Expression[] parse() {
-        Expression expr = parse_expr();
-
-        if (!expr) return exprs;
-
-        if (curr_token.type != TokenType.SemiColon) {
-            throw new Exception("Where's the ';', mate?");
+    bool isAtEnd() {
+        if (mCurrToken.type == TokenType.Eof) {
+            return true;
         }
 
-        advance();
-        exprs ~= expr;
-        return parse();
-    }
-    
-    Expression parse_expr() {
-        Expression lhs = parse_primary();
-        
-        if (!lhs) return null;
-        
-        return parse_binary_rhs(0, lhs);
+        return false;
     }
 
-    Expression parse_primary() {
-        switch (curr_token.type) {
-        case TokenType.Int: case TokenType.Float: return parse_number(); break;
-        case TokenType.Identifier: return parse_identifier(); break;
-        case TokenType.Left_paren: return parse_paren(); break;
-        case TokenType.Let: return parse_let(); break;
-        case TokenType.Const: return parse_const(); break;
-        case TokenType.Fn: return parse_function_definition(); break;
-        default: return null;
+    bool expect(TokenType type, string hint = "") {
+        string err  = "Expected '" ~ type ~ "' instead got '" ~ mCurrToken.lexeme.toString() ~ "'";
+
+        if (hint.length >= 1)
+            err ~= "\n |=> Hint: " ~ hint;
+        
+        if (mCurrToken.type != type)
+            throw new ParseError(err);
+        
+        return true;
+    }
+
+    AstNode[] parse() {
+        
+        if (isAtEnd()) return mSubtrees;
+        
+        AstNode expr = parseExpr();
+
+        expect(TokenType.SemiColon);
+        
+        advance();
+        
+        mSubtrees ~= expr;
+        
+        return parse();
+    }
+
+    AstNode parseExpr(int minPrec = 0) {
+        AstNode lhs = parsePrimary();
+
+         while (!isAtEnd()) {
+            string op = mCurrToken.lexeme.toString();
+            auto opInfo = getPrecAndAssoc(op);
+
+            if (opInfo.mPrec == -1 || opInfo.mPrec < minPrec) break;
+            
+            int nextMinPrec = opInfo.mAssoc == Assoc.Left ? opInfo.mPrec + 1 : opInfo.mPrec;
+            
+            advance();
+            AstNode rhs = parseExpr(nextMinPrec);
+            
+            lhs = new AstNode.BinaryNode(op, lhs, rhs);
+        }
+
+        mRoot = lhs;
+
+        return mRoot;
+    }
+
+    AstNode parsePrimary() {
+        switch (mCurrToken.type) {
+            case TokenType.Int: case TokenType.Float: return parseNumber();
+            case TokenType.Identifier: return parseIdentifier();
+            case TokenType.Left_Paren: return parseParen();
+            case TokenType.Let: return parseLet();
+            case TokenType.Const: return parseConst();
+            case TokenType.Left_Bracket: return parseBlock();
+            default: {
+                throw new ParseError("Expected a primary instead got '" ~ mCurrToken.lexeme.toString() ~ "'");
+            }
         }        
     }
 
-    Number parse_number() {
-        Number expr = new Number(curr_token.lexeme);
+    AstNode parseNumber() {
+        AstNode node = new AstNode.NumberNode(mCurrToken.lexeme);
         advance();
 
-        return expr;
+        return node;
     }
 
-    Identifier parse_identifier() {
-        Identifier expr = new Identifier(curr_token.lexeme);
+    AstNode parseIdentifier() {
+        AstNode node = new AstNode.IdentifierNode(mCurrToken.lexeme);
         advance();
 
-        return expr;
+        return node;
     }
 
-    Expression parse_paren() {
+    AstNode parseParen() {
         // escape "("
         advance();
-        Expression expr = parse_expr();
+        AstNode expr = parseExpr();
 
+        expect(TokenType.Right_Paren);
+        
         // escape ")"
         advance();
 
         return expr;
     }
+    
+    AstNode parseLet() {
+        // past let
+        advance();
+        
+        expect(TokenType.Identifier);
+        
+        AstNode identifier = parsePrimary();
 
-    Expression parse_binary_rhs(int search_prec, Expression lhs) {
-        while (true) {
-            int token_prec = getPrec(curr_token);
+        if (mCurrToken.type != TokenType.Eq)
+            return new AstNode.LetDeclarationNode(identifier);
+        
+        advance();
+        AstNode rhs = parseExpr();
+        
+        return new AstNode.LetDefinitionNode(identifier, rhs);        
+    }
+    
+    
+    AstNode parseConst() {
+        // past const
+        advance();
 
-            if (token_prec < search_prec)
-                return lhs;
-            
-            string op = curr_token.lexeme.toString();
-            
-            // advance past the operator
-            advance();
+        expect(TokenType.Identifier);
+        
+        AstNode identifier = parsePrimary();
+        
+        expect(TokenType.Eq, "const requires definition not declaration because it's as the name may suggest, a const");
+        
+        advance();
+        AstNode rhs = parseExpr();
 
-            Expression rhs = parse_primary();
-            if (!rhs) return null;
-
-            int next_token_prec = getPrec(curr_token);
-            
-            if (getAssoc(curr_token) == Assoc.Right)
-                token_prec -= 1;
-
-            if (token_prec < next_token_prec) {
-                rhs = parse_binary_rhs(token_prec, rhs);
-
-                if (!rhs) return null;
-            }
-            
-            lhs = new Binary(op, lhs, rhs);
-        }
+        return new AstNode.ConstDefinitionNode(identifier, rhs);
     }
 
-    Expression parse_let() {
+    AstNode parseBlock() {
+        
+        AstNode[] subtree = [];
+        
+        // past {
         advance();
-        Expression rhs = parse_expr();
-        return new Let(rhs);        
-    }
 
-    Expression parse_const() {
+        subtree ~= parseExpr();
+
+        expect(TokenType.SemiColon);
+        
         advance();
-        Expression rhs = parse_expr();
-        return new Const(rhs);
+            
+        expect(TokenType.Right_Bracket);
+        
+        // advance past }
+        advance();
+
+        return new AstNode.BlockNode(subtree);
     }
 
 }

@@ -2,6 +2,7 @@ module sad;
 
 import lexer;
 import parser;
+import error;
 
 import std.stdio;
 import std.algorithm;
@@ -9,8 +10,8 @@ import std.string : strip;
 
 void run(string src) {
     auto lexer = new Tokenizer(src);
-    auto parser = new Parser(lexer);
-    writeln(parser.parse());
+    auto ast = new Ast(lexer);
+    writeln(ast.parse());
 }
 
 int main() {
@@ -29,7 +30,14 @@ int main() {
             }
 
             line = line.strip();
-            run(line);
+
+            try {
+                run(line);
+
+            } catch (ParseError err) {
+                writeln(err);
+                continue;
+            }
         }
     }
 

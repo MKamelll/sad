@@ -6,31 +6,35 @@ import std.ascii;
 import std.conv;
 
 enum TokenType {
-    Left_paren, Right_paren, Plus, Minus, Star, Slash, Int, Float, Mod, Carrot,
-    Identifier, Comma, Let, Const, Eq, Eq_Eq, Bang, Bang_Eq, Greater_Eq, Less_Eq, Less, Greater,
-    Fn, End, Return, For, While, If, Elif, Else, Range, String, SemiColon, Eof
+    Left_Paren = "(", Right_Paren = ")", Left_Bracket = "{", Right_Bracket = "}",
+    Left_Square = "[", Right_Square = "]", SemiColon = ";", Plus = "+", Minus = "-", 
+    
+    Star = "*", Slash = "/", Int = "Int", Float = "Float", Mod = "%", Carrot = "^", 
+    Identifier = "Identifier", Comma = ",", Let = "let", Const = "const", Eq = "=", Eq_Eq = "==", Bang = "!",
+    Bang_Eq = "!=", Greater_Eq = ">=", Less_Eq = "<=", Less = "<", Greater = ">",
+    Fn = "fun", Return = "return", For = "for", While = "while", If = "if", Elif = "elif", Else = "else",
+    Range = "..", String = "String", Eof = "Eof"
 }
-
-alias Lexeme = Algebraic!(int, float, string);
-
-alias Number = Algebraic!(int, float);
 
 class Token {
     TokenType type;
-    Lexeme lexeme;
+    Variant lexeme;
 
-    this(TokenType type, Lexeme lexeme) {
+    this(TokenType type, Variant lexeme) {
         this.type = type;
         this.lexeme = lexeme;
     }
 
-    override string toString() {
-        if (lexeme.type == typeid(int) || lexeme.type == typeid(float))
-            return format("Token(type: %s, lexeme: %s)", to!string(type), to!string(lexeme));
+    override string toString() const {
+        if (lexeme.peek!(int) !is null) {
+            return format("Token(type: %s, lexeme: %s)", to!string(type), lexeme.get!(int));
+        } else if (lexeme.peek!(float) !is null) {
+            return format("Token(type: %s, lexeme: %s)", to!string(type), lexeme.get!(float));
+        }
         
-        return format("Token(type: %s, lexeme: '%s')", to!string(type), to!string(lexeme));
+        return format("Token(type: %s, lexeme: '%s')", to!string(type), lexeme.get!(string));
     }
-};
+}
 
 class Tokenizer {
     string source;
@@ -60,10 +64,10 @@ class Tokenizer {
             case '=': {
                 if (!peek().isNull && peek() == '=') {
                     advance(2);
-                    return new Token(TokenType.Eq_Eq, Lexeme("=="));
+                    return new Token(TokenType.Eq_Eq, Variant("=="));
                 } else {
                     advance(1);
-                    return new Token(TokenType.Eq, Lexeme("="));
+                    return new Token(TokenType.Eq, Variant("="));
                 }
                 break;
             }
@@ -71,10 +75,10 @@ class Tokenizer {
             case '>': {
                 if (!peek().isNull && peek() == '=') {
                     advance(2);
-                    return new Token(TokenType.Greater_Eq, Lexeme(">="));
+                    return new Token(TokenType.Greater_Eq, Variant(">="));
                 } else {
                     advance(1);
-                    return new Token(TokenType.Greater, Lexeme(">"));
+                    return new Token(TokenType.Greater, Variant(">"));
                 }
                 break;
             }
@@ -82,10 +86,10 @@ class Tokenizer {
             case '<': {
                 if (!peek().isNull && peek() == '=') {
                     advance(2);
-                    return new Token(TokenType.Less_Eq, Lexeme("<="));
+                    return new Token(TokenType.Less_Eq, Variant("<="));
                 } else {
                     advance(1);
-                    return new Token(TokenType.Less, Lexeme("<"));
+                    return new Token(TokenType.Less, Variant("<"));
                 }
                 break;
             }
@@ -93,114 +97,134 @@ class Tokenizer {
             case '!': {
                 if (!peek().isNull && peek() == '=') {
                     advance(2);
-                    return new Token(TokenType.Bang_Eq, Lexeme("!="));
+                    return new Token(TokenType.Bang_Eq, Variant("!="));
                 } else {
                     advance(1);
-                    return new Token(TokenType.Bang, Lexeme("!"));
+                    return new Token(TokenType.Bang, Variant("!"));
                 }
                 break;
             }
 
             case '(': {
                 advance(1);
-                return new Token(TokenType.Left_paren, Lexeme("("));
+                return new Token(TokenType.Left_Paren, Variant("("));
             }
 
             case ')': {
                 advance(1);
-                return new Token(TokenType.Right_paren, Lexeme(")")); 
+                return new Token(TokenType.Right_Paren, Variant(")")); 
             }
                 
             case '+': {
                 advance(1);
-                return new Token(TokenType.Plus, Lexeme("+"));
+                return new Token(TokenType.Plus, Variant("+"));
             }
 
             case '-': {
                 advance(1);
-                return new Token(TokenType.Minus, Lexeme("-"));
+                return new Token(TokenType.Minus, Variant("-"));
             }
 
             case '*': {
                 advance(1);
-                return new Token(TokenType.Star, Lexeme("*"));
+                return new Token(TokenType.Star, Variant("*"));
             }
 
             case '/': {
                 advance(1);
-                return new Token(TokenType.Slash, Lexeme("/"));
+                return new Token(TokenType.Slash, Variant("/"));
             }
 
             case ',': {
                 advance(1);
-                return new Token(TokenType.Comma, Lexeme(","));
+                return new Token(TokenType.Comma, Variant(","));
             }
 
             case '"': {
                 string s = str();
-                return new Token(TokenType.String, Lexeme(s));
+                return new Token(TokenType.String, Variant(s));
             }
 
             case '%': {
                 advance(1);
-                return new Token(TokenType.Mod, Lexeme("%"));
+                return new Token(TokenType.Mod, Variant("%"));
             }
 
             case '^': {
                 advance(1);
-                return new Token(TokenType.Carrot, Lexeme("^"));
+                return new Token(TokenType.Carrot, Variant("^"));
             }
 
             case ';': {
                 advance(1);
-                return new Token(TokenType.SemiColon, Lexeme(";"));
+                return new Token(TokenType.SemiColon, Variant(";"));
+            }
+
+            case '{': {
+                advance(1);
+                return new Token(TokenType.Left_Bracket, Variant("{"));
+            }
+
+            case '}': {
+                advance(1);
+                return new Token(TokenType.Right_Bracket, Variant("}"));
+            }
+
+            case '[': {
+                advance(1);
+                return new Token(TokenType.Left_Square, Variant("["));
+            }
+
+            case ']': {
+                advance(1);
+                return new Token(TokenType.Right_Square, Variant("]"));
             }
       
             case ' ': case '\t': advance(1); return next();
 
             default: {
                 if (isDigit(curr)) {
-                    Number num = number();
+                    auto num = number();
                         
                     if (num.type == typeid(float)) {
-                        return new Token(TokenType.Float, Lexeme(num));
+                        return new Token(TokenType.Float, Variant(num));
                     } else if (num.type == typeid(int)) {
-                        return new Token(TokenType.Int, Lexeme(num));
+                        return new Token(TokenType.Int, Variant(num));
                     }
                 } else if (isAlpha(curr)) {
                     string ident = identifier();
 
                     if (ident == "let") {
-                        return new Token(TokenType.Let, Lexeme(ident));
+                        return new Token(TokenType.Let, Variant(ident));
                     } else if (ident == "const") {
-                        return new Token(TokenType.Const, Lexeme(ident));
+                        return new Token(TokenType.Const, Variant(ident));
                     } else if (ident == "fn") {
-                        return new Token(TokenType.Fn, Lexeme(ident));
+                        return new Token(TokenType.Fn, Variant(ident));
                     } else if (ident == "if") {
-                        return new Token(TokenType.If, Lexeme(ident));
+                        return new Token(TokenType.If, Variant(ident));
                     } else if (ident == "elif") {
-                        return new Token(TokenType.Elif, Lexeme(ident));
+                        return new Token(TokenType.Elif, Variant(ident));
                     } else if (ident == "else") {
-                        return new Token(TokenType.Else, Lexeme(ident));
+                        return new Token(TokenType.Else, Variant(ident));
                     } else if (ident == "while") {
-                        return new Token(TokenType.While, Lexeme(ident));
+                        return new Token(TokenType.While, Variant(ident));
                     } else if (ident == "for") {
-                        return new Token(TokenType.For, Lexeme(ident));
+                        return new Token(TokenType.For, Variant(ident));
                     } else if (ident == "return") {
-                        return new Token(TokenType.Return, Lexeme(ident));
+                        return new Token(TokenType.Return, Variant(ident));
                     }
 
-                    return new Token(TokenType.Identifier, Lexeme(ident));
+                    return new Token(TokenType.Identifier, Variant(ident));
                 }
             }
             }
 
         }
 
-        return new Token(TokenType.Eof, Lexeme("EOF"));
+        return new Token(TokenType.Eof, Variant("EOF"));
     }
 
-    Number number() {
+    Variant number() {
         bool isFloat = false;
         string result;
 
@@ -219,7 +243,7 @@ class Tokenizer {
             advance(1);
         }
 
-        return isFloat ? Number(parse!float(result)) : Number(parse!int(result));
+        return isFloat ? Variant(parse!float(result)) : Variant(parse!int(result));
 
     }
 
