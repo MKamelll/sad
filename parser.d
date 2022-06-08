@@ -137,13 +137,24 @@ abstract class AstNode {
         }
     }
 
+    static class ParanNode : BlockNode
+    {
+        this (AstNode[] subtree) {
+            super(subtree);
+        }
+
+        override string toString() {
+            return "Paren(" ~ to!string(mSubtree) ~ ")";
+        }
+    }
+
     static class FunctionNode : AstNode
     {
         AstNode mIdentifier;
-        AstNode[] mParams;
+        AstNode mParams;
         AstNode mBlock;
 
-        this (AstNode identifier, AstNode[] params, AstNode block) {
+        this (AstNode identifier, AstNode params, AstNode block) {
             mIdentifier = identifier;
             mParams = params;
             mBlock = block;
@@ -173,16 +184,15 @@ class OpInfo
 
 class Ast
 {
-
     Tokenizer mLexer;
     AstNode mRoot;
-    AstNode[] mSubtrees;
+    AstNode[] mSubTrees;
     Token mCurrToken;
 
     this (Tokenizer lex) {
         mLexer = lex;
         mCurrToken = mLexer.next();
-        mSubtrees = [];
+        mSubTrees = [];
     }
 
     OpInfo getPrecAndAssoc(string op) {
@@ -216,34 +226,49 @@ class Ast
         return false;
     }
 
-    bool expect(TokenType type, string hint = "") {
+    bool check(TokenType type) {
+        if (mCurrToken.type == type)
+            return true;
+        
+        return false;
+    }
+
+    bool match(TokenType[] types...) {
+        foreach (type; types)
+        {
+            if (check(type)) {
+                advance();
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    ParseError expected(TokenType type, string hint = "") {
         string err  = "Expected '" ~ type ~ "' instead got '" ~ mCurrToken.lexeme.toString() ~ "'";
 
-        if (hint.length >= 1)
+        if (hint.length >= 1) 
             err ~= "\n |=> Hint: " ~ hint;
         
-        if (mCurrToken.type != type)
-            throw new ParseError(err);
-        
-        return true;
+        return new ParseError(err);
     }
 
     AstNode[] parse() {
         
-        if (isAtEnd()) return mSubtrees;
+        if (isAtEnd()) return mSubTrees;
         
         AstNode expr = parseExpr();
 
-        expect(TokenType.SemiColon);
+        if (!match(TokenType.SemiColon)) throw expected(TokenType.SemiColon);
         
-        advance();
-        
-        mSubtrees ~= expr;
+        mSubTrees ~= expr;
         
         return parse();
     }
 
     AstNode parseExpr(int minPrec = 0) {
+        
         AstNode lhs = parsePrimary();
 
          while (!isAtEnd()) {
@@ -266,139 +291,126 @@ class Ast
     }
 
     AstNode parsePrimary() {
-        switch (mCurrToken.type) {
-            case TokenType.Int: case TokenType.Float: return parseNumber();
-            case TokenType.Identifier: return parseIdentifier();
-            case TokenType.Left_Paren: return parseParen();
-            case TokenType.Let: return parseLet();
-            case TokenType.Const: return parseConst();
-            case TokenType.Left_Bracket: return parseBlock();
-            default: {
-                throw new ParseError("Expected a primary instead got '" ~ mCurrToken.lexeme.toString() ~ "'");
-            }
-        }        
+        return parseNumber();
     }
 
     AstNode parseNumber() {
-        AstNode node = new AstNode.NumberNode(mCurrToken.lexeme);
-        advance();
+        Token curr = mCurrToken;
+        if (match(TokenType.Int, TokenType.Float)) {
+            AstNode node = new AstNode.NumberNode(curr.lexeme);
+            return node;
+        }
 
-        return node;
+        return parseIdentifier();
     }
 
     AstNode parseIdentifier() {
-        AstNode node = new AstNode.IdentifierNode(mCurrToken.lexeme);
-        advance();
+        Token curr = mCurrToken;
+        if (match(TokenType.Identifier)) {
+            AstNode node = new AstNode.IdentifierNode(curr.lexeme);
+            return node;
 
-        return node;
+        }
+
+        return parseParen();
     }
 
     AstNode parseParen() {
-        // escape "("
-        advance();
-        AstNode expr = parseExpr();
-
-        expect(TokenType.Right_Paren);
         
-        // escape ")"
-        advance();
+        if (match(TokenType.Left_Paren)) {
+            AstNode[] result = [];
+            if (match(TokenType.Right_Paren)) return new AstNode.ParanNode(result);
+            
+            result ~= parseExpr();
 
-        return expr;
+            while (match(TokenType.Comma)) {
+                result ~= parseExpr(); 
+            }
+            
+            if (match(TokenType.Right_Paren)) {
+                return new AstNode.ParanNode(result);
+            } else {
+                throw expected(TokenType.Right_Paren);
+            }
+            
+        }
+
+        return parseLet();
     }
     
     AstNode parseLet() {
-        // past let
-        advance();
-        
-        expect(TokenType.Identifier);
-        
-        AstNode identifier = parsePrimary();
-
-        expect(TokenType.Colon, "You have to provide a type");
-
-        advance();
-
-        if (expect(TokenType.Fn)) {
-            return parseFn(identifier);
-        }
-
-        if (!expect(TokenType.Eq))
-            return new AstNode.LetDeclarationNode(identifier);
-        
-        advance();
-        AstNode rhs = parseExpr();
-        
-        return new AstNode.LetDefinitionNode(identifier, rhs);        
-    }
-    
-    
-    AstNode parseConst() {
-        // past const
-        advance();
-
-        expect(TokenType.Identifier);
-        
-        AstNode identifier = parsePrimary();
-        
-        expect(TokenType.Eq, "const requires definition not declaration because it's as the name may suggest, a const");
-        
-        advance();
-        AstNode rhs = parseExpr();
-
-        return new AstNode.ConstDefinitionNode(identifier, rhs);
-    }
-
-    AstNode parseBlock() {
-        
-        AstNode[] subtree = [];
-        
-        // past {
-        advance();
-
-        subtree ~= parseExpr();
-
-        expect(TokenType.SemiColon);
-        
-        advance();
+        if (match(TokenType.Let)) {
+            AstNode identifier = parsePrimary();            
             
-        expect(TokenType.Right_Bracket);
-        
-        // advance past }
-        advance();
+            match(TokenType.Colon);
+            
+            if (match(TokenType.Fn)) return parseFn(identifier);
 
-        return new AstNode.BlockNode(subtree);
+            if (match(TokenType.Eq)) {
+                AstNode rhs = parseExpr();
+                return new AstNode.LetDefinitionNode(identifier, rhs);        
+            
+            } else {
+
+                return new AstNode.LetDeclarationNode(identifier);
+            }
+
+        }
+        
+        return parseBlock();
     }
 
     AstNode parseFn(AstNode identifier) {
-        // pass fn
-        advance();
 
-        expect(TokenType.Eq, "Function definition without, you guessed it, definition");
-        
-        // advance =
-        advance();
+        if (match(TokenType.Eq)) {
+            AstNode params = new AstNode.ParanNode([]);
+            AstNode block = new AstNode.BlockNode([]);
+            
+            if (check(TokenType.Left_Paren)) {
+                params = parseParen();
+            }
 
-        // at (
-        advance();
+            if (check(TokenType.Left_Bracket)) {
+                block = parseBlock();
+            }
+            
+            return new AstNode.FunctionNode(identifier, params, block);
 
-        AstNode[] params = parseParams();
-
-        advance();
-        AstNode block = parseBlock();
-
-        return new AstNode.FunctionNode(identifier, params, block);
-    }
-
-    AstNode[] parseParams() {
-        AstNode[] result = [];
-
-        while (mCurrToken.type != TokenType.Right_Paren) {
-            if (mCurrToken.type == TokenType.Comma) advance();
-
-            result ~= parseIdentifier();
         }
         
-        return result;
+        throw expected(TokenType.Eq, "Function definition without, you guessed it, definition");
+    }
+
+    AstNode parseBlock() {
+
+        if (match(TokenType.Left_Bracket)) {
+            AstNode[] result = [];
+            if (match(TokenType.Right_Bracket)) return new AstNode.BlockNode(result);
+
+            result ~= parseExpr();
+            while (match(TokenType.SemiColon) && !match(TokenType.Right_Bracket)) {
+                result ~= parseExpr();
+            }
+
+            return new AstNode.BlockNode(result);
+        }
+        return parseConst();
+    }
+    
+    AstNode parseConst() {
+        if (match(TokenType.Const)) {
+            
+            AstNode identifier = parsePrimary();
+            
+            if (!match(TokenType.Eq)) 
+                throw expected(TokenType.Eq, "const requires definition not declaration because it's as the name may suggest, a const");
+            
+            AstNode rhs = parseExpr();
+            
+            return new AstNode.ConstDefinitionNode(identifier, rhs);
+        }
+
+        throw new ParseError("Expected a primary instead got '" ~ mCurrToken.lexeme.toString() ~ "'");
     }
 
 }
