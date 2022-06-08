@@ -1,8 +1,8 @@
 let c = 15;
 const d = 12;
 
-fn add(x: int, y: int): int {
-    return x + y;
+let add: fn = (a: int, b: int): int {
+    return a + b;
 }
 
 if 15 > 12 {

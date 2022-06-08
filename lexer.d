@@ -12,8 +12,8 @@ enum TokenType {
     Star = "*", Slash = "/", Int = "Int", Float = "Float", Mod = "%", Carrot = "^", 
     Identifier = "Identifier", Comma = ",", Let = "let", Const = "const", Eq = "=", Eq_Eq = "==", Bang = "!",
     Bang_Eq = "!=", Greater_Eq = ">=", Less_Eq = "<=", Less = "<", Greater = ">",
-    Fn = "fun", Return = "return", For = "for", While = "while", If = "if", Elif = "elif", Else = "else",
-    Range = "..", String = "String", Eof = "Eof"
+    Fn = "fn", Return = "return", For = "for", While = "while", If = "if", Elif = "elif", Else = "else",
+    Range = "..", String = "String", Colon = ":", Eof = "Eof"
 }
 
 class Token {
@@ -178,6 +178,11 @@ class Tokenizer {
             case ']': {
                 advance(1);
                 return new Token(TokenType.Right_Square, Variant("]"));
+            }
+
+            case ':' : {
+                advance(1);
+                return new Token(TokenType.Colon, Variant(":"));
             }
       
             case ' ': case '\t': advance(1); return next();

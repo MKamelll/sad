@@ -136,6 +136,24 @@ abstract class AstNode {
             return "Block(" ~ to!string(mSubtree) ~ ")";
         }
     }
+
+    static class FunctionNode : AstNode
+    {
+        AstNode mIdentifier;
+        AstNode[] mParams;
+        AstNode mBlock;
+
+        this (AstNode identifier, AstNode[] params, AstNode block) {
+            mIdentifier = identifier;
+            mParams = params;
+            mBlock = block;
+        }
+
+        override string toString() {
+            return "Fun(identifier: " ~ mIdentifier.toString() ~ ", params: "
+                ~ to!string(mParams) ~ ", block: " ~ mBlock.toString() ~ ")";
+        }
+    }
 }
 
 enum Assoc {
@@ -296,7 +314,15 @@ class Ast
         
         AstNode identifier = parsePrimary();
 
-        if (mCurrToken.type != TokenType.Eq)
+        expect(TokenType.Colon, "You have to provide a type");
+
+        advance();
+
+        if (expect(TokenType.Fn)) {
+            return parseFn(identifier);
+        }
+
+        if (!expect(TokenType.Eq))
             return new AstNode.LetDeclarationNode(identifier);
         
         advance();
@@ -341,6 +367,38 @@ class Ast
         advance();
 
         return new AstNode.BlockNode(subtree);
+    }
+
+    AstNode parseFn(AstNode identifier) {
+        // pass fn
+        advance();
+
+        expect(TokenType.Eq, "Function definition without, you guessed it, definition");
+        
+        // advance =
+        advance();
+
+        // at (
+        advance();
+
+        AstNode[] params = parseParams();
+
+        advance();
+        AstNode block = parseBlock();
+
+        return new AstNode.FunctionNode(identifier, params, block);
+    }
+
+    AstNode[] parseParams() {
+        AstNode[] result = [];
+
+        while (mCurrToken.type != TokenType.Right_Paren) {
+            if (mCurrToken.type == TokenType.Comma) advance();
+
+            result ~= parseIdentifier();
+        }
+        
+        return result;
     }
 
 }
