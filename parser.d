@@ -3,6 +3,7 @@ module parser;
 import std.algorithm;
 import std.exception;
 import std.stdio;
+import std.typecons;
 
 import error;
 import lexer;
@@ -251,9 +252,31 @@ class Ast
             return new AstNode.ConstDefinitionNode(identifier, rhs);
         }
 
-        throw new ParseError("Expected a primary instead got '" ~ mCurrToken.lexeme.toString() ~ "'");
+        return parseIf();
     }
 
-    
+    AstNode parseIf() {
+        if (match(TokenType.If)) {
+            
+            AstNode condition = parseExpr();
+            AstNode thenBranch = parseBlock();
+            AstNode[] elifBranches = [];
+
+            Nullable!AstNode elseBranch;
+            
+            while (match(TokenType.Elif)) {
+                elifBranches ~= parseBlock();
+            }
+
+            if (match(TokenType.Else)) {
+                elseBranch = parseBlock();
+            }
+
+            return new AstNode.IfNode(condition, thenBranch, elifBranches, elseBranch);
+        
+        }
+
+        throw new ParseError("Expected a primary instead got '" ~ mCurrToken.lexeme.toString() ~ "'");
+    }
 
 }

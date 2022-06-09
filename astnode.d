@@ -2,6 +2,7 @@ module astnode;
 
 import std.variant;
 import std.conv;
+import std.typecons;
 
 abstract class AstNode {
 
@@ -158,6 +159,31 @@ abstract class AstNode {
         override string toString() {
             return "Fun(identifier: " ~ mIdentifier.toString() ~ ", params: "
                 ~ to!string(mParams) ~ ", block: " ~ mBlock.toString() ~ ")";
+        }
+    }
+
+    static class IfNode : AstNode
+    {
+        AstNode mCondition;
+        AstNode mThenBranch;
+        AstNode[] mElifBranches;
+        Nullable!AstNode mElseBranch;
+
+        this (AstNode condition, AstNode thenBranch, AstNode[] elifBranches, Nullable!AstNode elseBranch) {
+            mCondition = condition;
+            mThenBranch = thenBranch;
+            mElifBranches = elifBranches;
+            mElseBranch = elseBranch;            
+        }
+
+        override string toString() {
+            if (!mElseBranch.isNull) {
+                return "If(condition: " ~ mCondition.toString() ~ ", then: " ~ mThenBranch.toString() ~ ", elif: "
+                    ~ to!string(mElifBranches) ~ ", else: " ~ mElseBranch.toString() ~ ")";            
+            }
+
+            return "If(condition: " ~ mCondition.toString() ~ ", then: " ~ mThenBranch.toString() ~ ", elif: "
+                    ~ to!string(mElifBranches) ~ ")";
         }
     }
 }
