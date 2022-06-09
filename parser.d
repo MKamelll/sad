@@ -281,7 +281,7 @@ class Ast
 
     AstNode parseFor() {
         if (match(TokenType.For)) {
-            match(TokenType.Left_Paren);
+            bool isParen = match(TokenType.Left_Paren);
             
             AstNode index = parseExpr();
 
@@ -293,7 +293,11 @@ class Ast
 
             AstNode increment = parseExpr();
 
-            match(TokenType.Right_Paren);
+            if (isParen) {
+                if (!match(TokenType.Right_Paren)) throw expected(TokenType.Right_Paren);
+            } else if (!check(TokenType.Left_Bracket)) {
+                throw expected(TokenType.Left_Bracket);
+            }
 
             AstNode block = parseBlock();
 

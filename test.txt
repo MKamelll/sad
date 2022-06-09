@@ -14,7 +14,3 @@ if 15 > 12 {
 for i in 0..15 {
     print(i)
 }
-
-[0..10].map((x) {
-    return x + 2;
-})
