@@ -186,4 +186,25 @@ abstract class AstNode {
                     ~ to!string(mElifBranches) ~ ")";
         }
     }
+
+    static class ForNode : AstNode
+    {
+        AstNode mIndex;
+        AstNode mCondition;
+        AstNode mIncrement;
+        AstNode mBlock;
+
+        this (AstNode index, AstNode condition, AstNode increment, AstNode block) {
+            mIndex = index;
+            mCondition = condition;
+            mIncrement = increment;
+            mBlock = block;
+        }
+
+        override string toString() {
+            return "For(index: " ~ mIndex.toString() ~ ", condition: "
+                ~ to!string(mCondition) ~ ", increment: " ~ mIncrement.toString()
+                ~ ", block: " ~ mBlock.toString() ~ ")";
+        }
+    }
 }

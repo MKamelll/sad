@@ -276,7 +276,32 @@ class Ast
         
         }
 
-        throw new ParseError("Expected a primary instead got '" ~ mCurrToken.lexeme.toString() ~ "'");
+        return parseFor();        
+    }
+
+    AstNode parseFor() {
+        if (match(TokenType.For)) {
+            match(TokenType.Left_Paren);
+            
+            AstNode index = parseExpr();
+
+            if (!match(TokenType.SemiColon)) throw expected(TokenType.SemiColon);
+
+            AstNode condition = parseExpr();
+
+            if (!match(TokenType.SemiColon)) throw expected(TokenType.SemiColon);
+
+            AstNode increment = parseExpr();
+
+            match(TokenType.Right_Paren);
+
+            AstNode block = parseBlock();
+
+            return new AstNode.ForNode(index, condition, increment, block);
+
+        }
+
+        throw new ParseError("Expected a primary instead got '" ~ mCurrToken.lexeme.toString() ~ "'");     
     }
 
 }
