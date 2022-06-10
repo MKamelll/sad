@@ -33,12 +33,26 @@ abstract class AstNode {
 
     static class IdentifierNode : PrimaryNode
     {
+        Nullable!string mType;
+        
         this(Variant val) {
             super(val);
         }
 
+        this (Variant val, string type) {
+            super(val);
+            mType = type;
+        }
+
+        Nullable!string getType() {
+            return mType;
+        }
+
         override string toString() {
-            return "Identifier(" ~ mVal.toString() ~ ")";
+            if (!mType.isNull)
+                return "Identifier(value: " ~ mVal.toString() ~ ", type: " ~ mType.toString() ~ ")";
+            
+            return "Identifier(value: " ~ mVal.toString() ~ ")";
         }
     }
 
@@ -158,6 +172,18 @@ abstract class AstNode {
 
         override string toString() {
             return "Fun(identifier: " ~ mIdentifier.toString() ~ ", params: "
+                ~ to!string(mParams) ~ ", block: " ~ mBlock.toString() ~ ")";
+        }
+    }
+
+    static class ConstFunctionNode : FunctionNode
+    {
+        this (AstNode identifier, AstNode params, AstNode block) {
+            super(identifier, params, block);
+        }
+
+        override string toString() {
+            return "ConstFun(identifier: " ~ mIdentifier.toString() ~ ", params: "
                 ~ to!string(mParams) ~ ", block: " ~ mBlock.toString() ~ ")";
         }
     }

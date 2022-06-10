@@ -182,7 +182,10 @@ class Tokenizer {
 
             case ':' : {
                 advance(1);
-                return new Token(TokenType.Colon, Variant(":"));
+                // allow spaces after : and before type
+                while (isWhite(source[current])) advance(1);
+                string ident = identifier();
+                return new Token(TokenType.Colon, Variant(ident));
             }
       
             case ' ': case '\t': advance(1); return next();
@@ -203,8 +206,6 @@ class Tokenizer {
                         return new Token(TokenType.Let, Variant(ident));
                     } else if (ident == "const") {
                         return new Token(TokenType.Const, Variant(ident));
-                    } else if (ident == "fn") {
-                        return new Token(TokenType.Fn, Variant(ident));
                     } else if (ident == "if") {
                         return new Token(TokenType.If, Variant(ident));
                     } else if (ident == "elif") {

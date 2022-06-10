@@ -147,9 +147,17 @@ class Ast
     }
 
     AstNode parseIdentifier() {
-        Token curr = mCurrToken;
-        if (match(TokenType.Identifier)) {
-            AstNode node = new AstNode.IdentifierNode(curr.lexeme);
+        if (check(TokenType.Identifier)) {
+            Token identifier = mCurrToken;
+            advance();
+            if (check(TokenType.Colon)) {
+                Token type = mCurrToken;
+                advance();
+                AstNode node = new AstNode.IdentifierNode(identifier.lexeme, type.lexeme.toString());
+                return node;
+            }
+            
+            AstNode node = new AstNode.IdentifierNode(identifier.lexeme);
             return node;
 
         }
@@ -182,11 +190,11 @@ class Ast
     
     AstNode parseLet() {
         if (match(TokenType.Let)) {
-            AstNode identifier = parsePrimary();            
+            AstNode identifier = parseIdentifier();            
             
-            match(TokenType.Colon);
+            auto type = (cast(AstNode.IdentifierNode) identifier).getType();
             
-            if (match(TokenType.Fn)) return parseFn(identifier);
+            if (!type.isNull && type.get == "fn") return parseFn(identifier);
 
             if (match(TokenType.Eq)) {
                 AstNode rhs = parseExpr();
@@ -242,7 +250,11 @@ class Ast
     AstNode parseConst() {
         if (match(TokenType.Const)) {
             
-            AstNode identifier = parsePrimary();
+            AstNode identifier = parseIdentifier();
+
+            auto type = (cast(AstNode.IdentifierNode) identifier).getType();
+            
+            if (!type.isNull && type.get == "fn") return parseConstFn(identifier);
             
             if (!match(TokenType.Eq)) 
                 throw expected(TokenType.Eq, "const requires definition not declaration because it's as the name may suggest, a const");
@@ -253,6 +265,27 @@ class Ast
         }
 
         return parseIf();
+    }
+
+    AstNode parseConstFn(AstNode identifier) {
+
+        if (match(TokenType.Eq)) {
+            AstNode params = new AstNode.ParanNode([]);
+            AstNode block = new AstNode.BlockNode([]);
+            
+            if (check(TokenType.Left_Paren)) {
+                params = parseParen();
+            }
+
+            if (check(TokenType.Left_Bracket)) {
+                block = parseBlock();
+            }
+            
+            return new AstNode.ConstFunctionNode(identifier, params, block);
+
+        }
+        
+        throw expected(TokenType.Eq, "Function definition without, you guessed it, definition");
     }
 
     AstNode parseIf() {
