@@ -203,10 +203,10 @@ abstract class AstNode {
 
         override string toString() {
             if (!mReturnType.isNull) {
-                return "AnnonymousFn(returnType: " ~ mReturnType.toString() ~ ", params: " ~ mParams.toString()
+                return "AnonymousFn(returnType: " ~ mReturnType.toString() ~ ", params: " ~ mParams.toString()
                     ~ ", block: " ~ mBlock.toString() ~ ")";    
             }
-            return "AnnonymousFn(params: " ~ mParams.toString() ~ ", block: " ~ mBlock.toString() ~ ")";
+            return "AnonymousFn(params: " ~ mParams.toString() ~ ", block: " ~ mBlock.toString() ~ ")";
         }
     }
 
@@ -253,6 +253,60 @@ abstract class AstNode {
             return "For(index: " ~ mIndex.toString() ~ ", condition: "
                 ~ to!string(mCondition) ~ ", increment: " ~ mIncrement.toString()
                 ~ ", block: " ~ mBlock.toString() ~ ")";
+        }
+    }
+
+    static class WhileNode : AstNode
+    {
+        AstNode mCondition;
+        Nullable!AstNode mBlock;
+
+        this (AstNode condition, AstNode block) {
+            mCondition = condition;
+            mBlock = block;
+        }
+
+        this (AstNode condition) {
+            mCondition = condition;
+        }
+
+        override string toString() {
+            if (!mBlock.isNull) {
+                return "While(condition: " ~ mCondition.toString()
+                    ~ ", block: " ~ mBlock.toString() ~ ")";
+
+            }
+
+            return "While(condition: " ~ mCondition.toString() ~ ")";
+        }
+    }
+
+    static class AnonymousStruct : AstNode
+    {
+        AstNode mBlock;
+
+        this (AstNode block) {
+            mBlock = block;
+        }
+
+        override string toString() {
+            return "AnonymusStruct(block: " ~ mBlock.toString() ~ ")";
+        }
+    }
+
+    static class StructNode : AstNode
+    {
+        AstNode mIdentifier;
+        AstNode mAnonymousStruct;
+
+        this (AstNode identifier, AstNode anstruct) {
+            mIdentifier = identifier;
+            mAnonymousStruct = anstruct;
+        }
+
+        override string toString() {
+            return "Struct(identifier: " ~ mIdentifier.toString()
+                ~ ", anonymousStruct: " ~ mAnonymousStruct.toString() ~ ")";
         }
     }
 }

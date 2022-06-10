@@ -94,6 +94,15 @@ class Ast
         return false;
     }
 
+    
+    bool checkPrevious(TokenType type) {
+        if (previous().type == type) {
+            return true;
+        }
+
+        return false;
+    }
+
     ParseError expected(TokenType type, string hint = "") {
         string err  = "Expected '" ~ type ~ "' instead got '" ~ mCurrToken.lexeme.toString() ~ "'";
 
@@ -109,7 +118,7 @@ class Ast
         
         AstNode expr = parseExpr();
 
-        if (!match(TokenType.SemiColon)) throw expected(TokenType.SemiColon);
+        if (!match(TokenType.SemiColon) && !checkPrevious(TokenType.Right_Bracket)) throw expected(TokenType.SemiColon);
         
         mSubTrees ~= expr;
         
@@ -176,12 +185,12 @@ class Ast
             AstNode[] paren = [];
             if (match(TokenType.Right_Paren)) {
 
-                auto annonfn = parseAnnonFn(paren);
+                auto anonfn = parseAnonFn(paren);
 
-                if (annonfn.isNull) {
+                if (anonfn.isNull) {
                     return new AstNode.ParanNode(paren);
                 } else {
-                    return annonfn.get;
+                    return anonfn.get;
                 }
             }
             
@@ -193,12 +202,12 @@ class Ast
             
             if (match(TokenType.Right_Paren)) {
                 
-                auto annonfn = parseAnnonFn(paren);
+                auto anonfn = parseAnonFn(paren);
 
-                if (annonfn.isNull) {
+                if (anonfn.isNull) {
                     return new AstNode.ParanNode(paren);
                 } else {
-                    return annonfn.get;
+                    return anonfn.get;
                 }
                 
             } else {
@@ -210,7 +219,7 @@ class Ast
         return parseLet();
     }
     
-    Nullable!(AstNode.AnonymousFunction) parseAnnonFn(AstNode[] paren) {
+    Nullable!(AstNode.AnonymousFunction) parseAnonFn(AstNode[] paren) {
         Nullable!string returnType;
         if (match(TokenType.Colon)) {
             returnType = previous().lexeme.toString();
@@ -250,9 +259,9 @@ class Ast
 
         if (match(TokenType.Fn)) {
             AstNode identifier = parseIdentifier();
-            AstNode annonFn = parseExpr();
+            AstNode anonFn = parseExpr();
             
-            return new AstNode.FunctionNode(identifier, annonFn);
+            return new AstNode.FunctionNode(identifier, anonFn);
         }
         
         return parseBlock();
@@ -340,6 +349,46 @@ class Ast
 
         }
 
+        return parseWhile();
+
+    }
+
+    AstNode parseWhile() {
+        if (match(TokenType.While)) {
+            bool isParen = match(TokenType.Left_Paren);
+            
+            AstNode condition = parseExpr();
+
+            if (isParen) {
+                if (!match(TokenType.Right_Paren)) throw expected(TokenType.Right_Paren);
+            } 
+            
+            if (!check(TokenType.Left_Bracket)) {
+                return new AstNode.WhileNode(condition);
+            } else {
+                throw expected(TokenType.Left_Bracket);
+            }
+            
+            AstNode block = parseBlock();
+
+            return new AstNode.WhileNode(condition, block);
+        }        
+        
+        return parseStruct();
+    }
+
+    AstNode parseStruct() {
+        if (match(TokenType.Struct)) {
+            if (check(TokenType.Identifier)) {
+                AstNode identifier = parseIdentifier();
+                AstNode block = parseBlock();
+                return new AstNode.StructNode(identifier, new AstNode.AnonymousStruct(block));            
+            }
+
+            AstNode block = parseBlock();
+            return new AstNode.AnonymousStruct(block);
+        }
+        
         throw new ParseError("Expected a primary instead got '" ~ mCurrToken.lexeme.toString() ~ "'");     
     }
 
