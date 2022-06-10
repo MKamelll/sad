@@ -161,30 +161,52 @@ abstract class AstNode {
     static class FunctionNode : AstNode
     {
         AstNode mIdentifier;
-        AstNode mParams;
-        AstNode mBlock;
+        AstNode mAnnonFn;
 
-        this (AstNode identifier, AstNode params, AstNode block) {
+        this (AstNode identifier, AstNode annonFn) {
             mIdentifier = identifier;
-            mParams = params;
-            mBlock = block;
+            mAnnonFn = annonFn;
         }
 
         override string toString() {
-            return "Fun(identifier: " ~ mIdentifier.toString() ~ ", params: "
-                ~ to!string(mParams) ~ ", block: " ~ mBlock.toString() ~ ")";
+            return "Fn(identifier: " ~ mIdentifier.toString() ~ ", AnnonFn: " ~ mAnnonFn.toString() ~ ")";
         }
     }
 
     static class ConstFunctionNode : FunctionNode
     {
-        this (AstNode identifier, AstNode params, AstNode block) {
-            super(identifier, params, block);
+        this (AstNode identifier, AstNode annonFn) {
+            super(identifier, annonFn);
         }
 
         override string toString() {
-            return "ConstFun(identifier: " ~ mIdentifier.toString() ~ ", params: "
-                ~ to!string(mParams) ~ ", block: " ~ mBlock.toString() ~ ")";
+            return "ConstFn(identifier: " ~ mIdentifier.toString() ~ ", AnnonFn: " ~ mAnnonFn.toString() ~ ")";
+        }
+    }
+
+    static class AnonymousFunction : AstNode
+    {
+        AstNode mParams;
+        AstNode mBlock;
+        Nullable!string mReturnType;
+
+        this (AstNode params, AstNode block, string returnType) {
+            mParams = params;
+            mBlock = block;
+            mReturnType = returnType;
+        }
+
+        this (AstNode params, AstNode block) {
+            mParams = params;
+            mBlock = block;
+        }
+
+        override string toString() {
+            if (!mReturnType.isNull) {
+                return "AnnonymousFn(returnType: " ~ mReturnType.toString() ~ ", params: " ~ mParams.toString()
+                    ~ ", block: " ~ mBlock.toString() ~ ")";    
+            }
+            return "AnnonymousFn(params: " ~ mParams.toString() ~ ", block: " ~ mBlock.toString() ~ ")";
         }
     }
 

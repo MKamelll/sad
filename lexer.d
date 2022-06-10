@@ -12,7 +12,7 @@ enum TokenType {
     Star = "*", Slash = "/", Int = "Int", Float = "Float", Mod = "%", Carrot = "^", 
     Identifier = "Identifier", Comma = ",", Let = "let", Const = "const", Eq = "=", Eq_Eq = "==", Bang = "!",
     Bang_Eq = "!=", Greater_Eq = ">=", Less_Eq = "<=", Less = "<", Greater = ">",
-    Fn = "fn", Return = "return", For = "for", While = "while", If = "if", Elif = "elif", Else = "else",
+    Fn = "fn", Struct = "struct" , Return = "return", For = "for", While = "while", If = "if", Elif = "elif", Else = "else",
     Range = "..", String = "String", Colon = ":", Eof = "Eof"
 }
 
@@ -218,6 +218,10 @@ class Tokenizer {
                         return new Token(TokenType.For, Variant(ident));
                     } else if (ident == "return") {
                         return new Token(TokenType.Return, Variant(ident));
+                    } else if (ident == "fn") {
+                        return new Token(TokenType.Fn, Variant(ident));
+                    } else if (ident == "struct") {
+                        return new Token(TokenType.Struct, Variant(ident));
                     }
 
                     return new Token(TokenType.Identifier, Variant(ident));
