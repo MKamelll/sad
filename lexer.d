@@ -7,7 +7,7 @@ import std.conv;
 
 enum TokenType {
     Left_Paren = "(", Right_Paren = ")", Left_Bracket = "{", Right_Bracket = "}",
-    Left_Square = "[", Right_Square = "]", SemiColon = ";", Plus = "+", Minus = "-", 
+    Left_Square = "[", Right_Square = "]", SemiColon = ";", Plus = "+", Plus_Plus = "++", Plus_Eq = "+=", Minus = "-", 
     
     Star = "*", Slash = "/", Int = "Int", Float = "Float", Mod = "%", Carrot = "^", 
     Identifier = "Identifier", Comma = ",", Let = "let", Const = "const", Eq = "=", Eq_Eq = "==", Bang = "!",
@@ -116,8 +116,17 @@ class Tokenizer {
             }
                 
             case '+': {
-                advance(1);
-                return new Token(TokenType.Plus, Variant("+"));
+                if (!peek().isNull && peek() == '+') {
+                    advance(2);
+                    return new Token(TokenType.Plus_Plus, Variant("++"));
+                } else if (!peek().isNull && peek() == '=') {
+                    advance(2);
+                    return new Token(TokenType.Plus_Eq, Variant("+="));
+                } else {
+                    advance(1);
+                    return new Token(TokenType.Plus, Variant("+"));
+
+                }
             }
 
             case '-': {

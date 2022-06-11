@@ -42,6 +42,7 @@ class Ast
     OpInfo getPrecAndAssoc(string op) {
         switch (op) {
             case "=":  return new OpInfo(1, Assoc.Right);
+            case "+=": return new OpInfo(1, Assoc.Left);
             case "==": return new OpInfo(2, Assoc.Left);
             case "!=": return new OpInfo(2, Assoc.Left);
             case ">":  return new OpInfo(3, Assoc.Left);
@@ -175,7 +176,15 @@ class Ast
             return node;
 
         }
+        return parsePrefix();
+    }
 
+    AstNode parsePrefix() {
+        if (match(TokenType.Minus, TokenType.Bang, TokenType.Plus, TokenType.Plus_Plus)) {
+            string op = previous().lexeme.toString();
+            AstNode rhs = parsePrimary();
+            return new AstNode.PrefixNode(op, rhs);
+        }
         return parseParen();
     }
 
