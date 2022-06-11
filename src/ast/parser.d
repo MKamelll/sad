@@ -10,7 +10,7 @@ import lexer;
 import astnode;
 
 enum Assoc {
-    Left, Right, None
+    LEFT, RIGHT, NONE
 }
 
 class OpInfo
@@ -41,21 +41,21 @@ class Ast
 
     OpInfo getPrecAndAssoc(string op) {
         switch (op) {
-            case "=":  return new OpInfo(1, Assoc.Right);
-            case "+=": return new OpInfo(1, Assoc.Left);
-            case "==": return new OpInfo(2, Assoc.Left);
-            case "!=": return new OpInfo(2, Assoc.Left);
-            case ">":  return new OpInfo(3, Assoc.Left);
-            case ">=": return new OpInfo(3, Assoc.Left);
-            case "<":  return new OpInfo(3, Assoc.Left);
-            case "<=": return new OpInfo(3, Assoc.Left);
-            case "+":  return new OpInfo(4, Assoc.Left);
-            case "-":  return new OpInfo(4, Assoc.Left);
-            case "*":  return new OpInfo(5, Assoc.Left);
-            case "/":  return new OpInfo(5, Assoc.Left);
-            case "%":  return new OpInfo(5, Assoc.Left);
-            case "^":  return new OpInfo(6, Assoc.Right);
-            default:   return new OpInfo(-1, Assoc.None);
+            case "=":  return new OpInfo(1, Assoc.RIGHT);
+            case "+=": return new OpInfo(1, Assoc.LEFT);
+            case "==": return new OpInfo(2, Assoc.LEFT);
+            case "!=": return new OpInfo(2, Assoc.LEFT);
+            case ">":  return new OpInfo(3, Assoc.LEFT);
+            case ">=": return new OpInfo(3, Assoc.LEFT);
+            case "<":  return new OpInfo(3, Assoc.LEFT);
+            case "<=": return new OpInfo(3, Assoc.LEFT);
+            case "+":  return new OpInfo(4, Assoc.LEFT);
+            case "-":  return new OpInfo(4, Assoc.LEFT);
+            case "*":  return new OpInfo(5, Assoc.LEFT);
+            case "/":  return new OpInfo(5, Assoc.LEFT);
+            case "%":  return new OpInfo(5, Assoc.LEFT);
+            case "^":  return new OpInfo(6, Assoc.RIGHT);
+            default:   return new OpInfo(-1, Assoc.NONE);
         }
     }
 
@@ -64,7 +64,7 @@ class Ast
     }
 
     bool isAtEnd() {
-        if (mCurrToken.type == TokenType.Eof) {
+        if (mCurrToken.type == TokenType.EOF) {
             return true;
         }
 
@@ -119,7 +119,7 @@ class Ast
         
         AstNode expr = parseExpr();
 
-        if (!match(TokenType.SemiColon) && !checkPrevious(TokenType.Right_Bracket)) throw expected(TokenType.SemiColon);
+        if (!match(TokenType.SEMICOLON) && !checkPrevious(TokenType.RIGHT_BRACKET)) throw expected(TokenType.SEMICOLON);
         
         mSubTrees ~= expr;
         
@@ -136,7 +136,7 @@ class Ast
 
             if (opInfo.mPrec == -1 || opInfo.mPrec < minPrec) break;
             
-            int nextMinPrec = opInfo.mAssoc == Assoc.Left ? opInfo.mPrec + 1 : opInfo.mPrec;
+            int nextMinPrec = opInfo.mAssoc == Assoc.LEFT ? opInfo.mPrec + 1 : opInfo.mPrec;
             
             advance();
             AstNode rhs = parseExpr(nextMinPrec);
@@ -154,7 +154,7 @@ class Ast
     }
 
     AstNode parseNumber() {
-        if (match(TokenType.Int, TokenType.Float)) {
+        if (match(TokenType.INT, TokenType.FLOAT)) {
             AstNode node = new AstNode.NumberNode(previous().lexeme);
             return node;
         }
@@ -163,10 +163,10 @@ class Ast
     }
 
     AstNode parseIdentifier() {
-        if (match(TokenType.Identifier)) {
+        if (match(TokenType.IDENTIFIER)) {
             Token identifier = previous();
             
-            if (match(TokenType.Colon)) {
+            if (match(TokenType.COLON)) {
                 Token type = previous();
                 AstNode node = new AstNode.IdentifierNode(identifier.lexeme, type.lexeme.toString());
                 return node;
@@ -180,7 +180,7 @@ class Ast
     }
 
     AstNode parsePrefix() {
-        if (match(TokenType.Minus, TokenType.Bang, TokenType.Plus, TokenType.Plus_Plus)) {
+        if (match(TokenType.MINUS, TokenType.BANG, TokenType.PLUS, TokenType.PLUS_PLUS)) {
             string op = previous().lexeme.toString();
             AstNode rhs = parsePrimary();
             return new AstNode.PrefixNode(op, rhs);
@@ -190,9 +190,9 @@ class Ast
 
     AstNode parseParen() {
         
-        if (match(TokenType.Left_Paren)) {
+        if (match(TokenType.LEFT_PAREN)) {
             AstNode[] paren = [];
-            if (match(TokenType.Right_Paren)) {
+            if (match(TokenType.RIGHT_PAREN)) {
 
                 auto anonfn = parseAnonFn(paren);
 
@@ -205,11 +205,11 @@ class Ast
             
             paren ~= parseExpr();
 
-            while (match(TokenType.Comma)) {
+            while (match(TokenType.COMMA)) {
                 paren ~= parseExpr(); 
             }
             
-            if (match(TokenType.Right_Paren)) {
+            if (match(TokenType.RIGHT_PAREN)) {
                 
                 auto anonfn = parseAnonFn(paren);
 
@@ -220,7 +220,7 @@ class Ast
                 }
                 
             } else {
-                throw expected(TokenType.Right_Paren);
+                throw expected(TokenType.RIGHT_PAREN);
             }
             
         }
@@ -230,11 +230,11 @@ class Ast
     
     Nullable!(AstNode.AnonymousFunction) parseAnonFn(AstNode[] paren) {
         Nullable!string returnType;
-        if (match(TokenType.Colon)) {
+        if (match(TokenType.COLON)) {
             returnType = previous().lexeme.toString();
         }
         
-        if (check(TokenType.Left_Bracket)) {
+        if (check(TokenType.LEFT_BRACKET)) {
             AstNode block = parseBlock();
 
             if (returnType.isNull)
@@ -247,10 +247,10 @@ class Ast
     }
 
     AstNode parseLet() {
-        if (match(TokenType.Let)) {
+        if (match(TokenType.LET)) {
             AstNode identifier = parseIdentifier();
 
-            if (match(TokenType.Eq)) {
+            if (match(TokenType.EQ)) {
                 AstNode rhs = parseExpr();
                 return new AstNode.LetDefinitionNode(identifier, rhs);        
             
@@ -266,7 +266,7 @@ class Ast
 
     AstNode parseFn() {
 
-        if (match(TokenType.Fn)) {
+        if (match(TokenType.FN)) {
             AstNode identifier = parseIdentifier();
             AstNode anonFn = parseExpr();
             
@@ -278,12 +278,12 @@ class Ast
 
     AstNode parseBlock() {
 
-        if (match(TokenType.Left_Bracket)) {
+        if (match(TokenType.LEFT_BRACKET)) {
             AstNode[] result = [];
-            if (match(TokenType.Right_Bracket)) return new AstNode.BlockNode(result);
+            if (match(TokenType.RIGHT_BRACKET)) return new AstNode.BlockNode(result);
 
             result ~= parseExpr();
-            while (match(TokenType.SemiColon) && !match(TokenType.Right_Bracket)) {
+            while (match(TokenType.SEMICOLON) && !match(TokenType.RIGHT_BRACKET)) {
                 result ~= parseExpr();
             }
 
@@ -293,12 +293,12 @@ class Ast
     }
     
     AstNode parseConst() {
-        if (match(TokenType.Const)) {
+        if (match(TokenType.CONST)) {
             
             AstNode identifier = parseIdentifier();
             
-            if (!match(TokenType.Eq)) 
-                throw expected(TokenType.Eq, "const requires definition not declaration because it's as the name may suggest, a const");
+            if (!match(TokenType.EQ)) 
+                throw expected(TokenType.EQ, "const requires definition not declaration because it's as the name may suggest, a const");
             
             AstNode rhs = parseExpr();
             
@@ -309,7 +309,7 @@ class Ast
     }
 
     AstNode parseIf() {
-        if (match(TokenType.If)) {
+        if (match(TokenType.IF)) {
             
             AstNode condition = parseExpr();
             AstNode thenBranch = parseBlock();
@@ -317,11 +317,11 @@ class Ast
 
             Nullable!AstNode elseBranch;
             
-            while (match(TokenType.Elif)) {
+            while (match(TokenType.ELIF)) {
                 elifBranches ~= parseBlock();
             }
 
-            if (match(TokenType.Else)) {
+            if (match(TokenType.ELSE)) {
                 elseBranch = parseBlock();
             }
 
@@ -333,23 +333,23 @@ class Ast
     }
 
     AstNode parseFor() {
-        if (match(TokenType.For)) {
-            bool isParen = match(TokenType.Left_Paren);
+        if (match(TokenType.FOR)) {
+            bool isParen = match(TokenType.LEFT_PAREN);
             
             AstNode index = parseExpr();
 
-            if (!match(TokenType.SemiColon)) throw expected(TokenType.SemiColon);
+            if (!match(TokenType.SEMICOLON)) throw expected(TokenType.SEMICOLON);
 
             AstNode condition = parseExpr();
 
-            if (!match(TokenType.SemiColon)) throw expected(TokenType.SemiColon);
+            if (!match(TokenType.SEMICOLON)) throw expected(TokenType.SEMICOLON);
 
             AstNode increment = parseExpr();
 
             if (isParen) {
-                if (!match(TokenType.Right_Paren)) throw expected(TokenType.Right_Paren);
-            } else if (!check(TokenType.Left_Bracket)) {
-                throw expected(TokenType.Left_Bracket);
+                if (!match(TokenType.RIGHT_PAREN)) throw expected(TokenType.RIGHT_PAREN);
+            } else if (!check(TokenType.LEFT_BRACKET)) {
+                throw expected(TokenType.LEFT_BRACKET);
             }
 
             AstNode block = parseBlock();
@@ -363,19 +363,19 @@ class Ast
     }
 
     AstNode parseWhile() {
-        if (match(TokenType.While)) {
-            bool isParen = match(TokenType.Left_Paren);
+        if (match(TokenType.WHILE)) {
+            bool isParen = match(TokenType.LEFT_PAREN);
             
             AstNode condition = parseExpr();
 
             if (isParen) {
-                if (!match(TokenType.Right_Paren)) throw expected(TokenType.Right_Paren);
+                if (!match(TokenType.RIGHT_PAREN)) throw expected(TokenType.RIGHT_PAREN);
             } 
             
-            if (!check(TokenType.Left_Bracket)) {
+            if (!check(TokenType.LEFT_BRACKET)) {
                 return new AstNode.WhileNode(condition);
             } else {
-                throw expected(TokenType.Left_Bracket);
+                throw expected(TokenType.LEFT_BRACKET);
             }
             
             AstNode block = parseBlock();
@@ -387,8 +387,8 @@ class Ast
     }
 
     AstNode parseStruct() {
-        if (match(TokenType.Struct)) {
-            if (check(TokenType.Identifier)) {
+        if (match(TokenType.STRUCT)) {
+            if (check(TokenType.IDENTIFIER)) {
                 AstNode identifier = parseIdentifier();
                 AstNode block = parseBlock();
                 return new AstNode.StructNode(identifier, new AstNode.AnonymousStruct(block));            

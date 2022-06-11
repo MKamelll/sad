@@ -6,14 +6,14 @@ import std.ascii;
 import std.conv;
 
 enum TokenType {
-    Left_Paren = "(", Right_Paren = ")", Left_Bracket = "{", Right_Bracket = "}",
-    Left_Square = "[", Right_Square = "]", SemiColon = ";", Plus = "+", Plus_Plus = "++", Plus_Eq = "+=", Minus = "-", 
+    LEFT_PAREN = "(", RIGHT_PAREN = ")", LEFT_BRACKET = "{", RIGHT_BRACKET = "}",
+    LEFT_SQUARE = "[", RIGHT_SQUARE = "]", SEMICOLON = ";", PLUS = "+", PLUS_PLUS = "++", PLUS_EQ = "+=", MINUS = "-", 
     
-    Star = "*", Slash = "/", Int = "Int", Float = "Float", Mod = "%", Carrot = "^", 
-    Identifier = "Identifier", Comma = ",", Let = "let", Const = "const", Eq = "=", Eq_Eq = "==", Bang = "!",
-    Bang_Eq = "!=", Greater_Eq = ">=", Less_Eq = "<=", Less = "<", Greater = ">",
-    Fn = "fn", Struct = "struct" , Return = "return", For = "for", While = "while", If = "if", Elif = "elif", Else = "else",
-    Range = "..", String = "String", Colon = ":", Eof = "Eof"
+    STAR = "*", SLASH = "/", INT = "INT", FLOAT = "FLOAT", MOD = "%", CARROT = "^", 
+    IDENTIFIER = "IDENTIFIER", COMMA = ",", LET = "LET", CONST = "CONST", EQ = "=", EQ_EQ = "==", BANG = "!",
+    BANG_EQ = "!=", GREATER_EQ = ">=", LESS_EQ = "<=", LESS = "<", GREATER = ">",
+    FN = "FN", STRUCT = "STRUCT" , RETURN = "RETURN", FOR = "FOR", WHILE = "WHILE", IF = "IF", ELIF = "ELIF", ELSE = "ELSE",
+    RANGE = "..", STRING = "STRING", COLON = ":", EOF = "EOF"
 }
 
 class Token {
@@ -64,10 +64,10 @@ class Tokenizer {
             case '=': {
                 if (!peek().isNull && peek() == '=') {
                     advance(2);
-                    return new Token(TokenType.Eq_Eq, Variant("=="));
+                    return new Token(TokenType.EQ_EQ, Variant("=="));
                 } else {
                     advance(1);
-                    return new Token(TokenType.Eq, Variant("="));
+                    return new Token(TokenType.EQ, Variant("="));
                 }
                 break;
             }
@@ -75,10 +75,10 @@ class Tokenizer {
             case '>': {
                 if (!peek().isNull && peek() == '=') {
                     advance(2);
-                    return new Token(TokenType.Greater_Eq, Variant(">="));
+                    return new Token(TokenType.GREATER_EQ, Variant(">="));
                 } else {
                     advance(1);
-                    return new Token(TokenType.Greater, Variant(">"));
+                    return new Token(TokenType.GREATER, Variant(">"));
                 }
                 break;
             }
@@ -86,10 +86,10 @@ class Tokenizer {
             case '<': {
                 if (!peek().isNull && peek() == '=') {
                     advance(2);
-                    return new Token(TokenType.Less_Eq, Variant("<="));
+                    return new Token(TokenType.LESS_EQ, Variant("<="));
                 } else {
                     advance(1);
-                    return new Token(TokenType.Less, Variant("<"));
+                    return new Token(TokenType.LESS, Variant("<"));
                 }
                 break;
             }
@@ -97,96 +97,96 @@ class Tokenizer {
             case '!': {
                 if (!peek().isNull && peek() == '=') {
                     advance(2);
-                    return new Token(TokenType.Bang_Eq, Variant("!="));
+                    return new Token(TokenType.BANG_EQ, Variant("!="));
                 } else {
                     advance(1);
-                    return new Token(TokenType.Bang, Variant("!"));
+                    return new Token(TokenType.BANG, Variant("!"));
                 }
                 break;
             }
 
             case '(': {
                 advance(1);
-                return new Token(TokenType.Left_Paren, Variant("("));
+                return new Token(TokenType.LEFT_PAREN, Variant("("));
             }
 
             case ')': {
                 advance(1);
-                return new Token(TokenType.Right_Paren, Variant(")")); 
+                return new Token(TokenType.RIGHT_PAREN, Variant(")")); 
             }
                 
             case '+': {
                 if (!peek().isNull && peek() == '+') {
                     advance(2);
-                    return new Token(TokenType.Plus_Plus, Variant("++"));
+                    return new Token(TokenType.PLUS_PLUS, Variant("++"));
                 } else if (!peek().isNull && peek() == '=') {
                     advance(2);
-                    return new Token(TokenType.Plus_Eq, Variant("+="));
+                    return new Token(TokenType.PLUS_EQ, Variant("+="));
                 } else {
                     advance(1);
-                    return new Token(TokenType.Plus, Variant("+"));
+                    return new Token(TokenType.PLUS, Variant("+"));
 
                 }
             }
 
             case '-': {
                 advance(1);
-                return new Token(TokenType.Minus, Variant("-"));
+                return new Token(TokenType.MINUS, Variant("-"));
             }
 
             case '*': {
                 advance(1);
-                return new Token(TokenType.Star, Variant("*"));
+                return new Token(TokenType.STAR, Variant("*"));
             }
 
             case '/': {
                 advance(1);
-                return new Token(TokenType.Slash, Variant("/"));
+                return new Token(TokenType.SLASH, Variant("/"));
             }
 
             case ',': {
                 advance(1);
-                return new Token(TokenType.Comma, Variant(","));
+                return new Token(TokenType.COMMA, Variant(","));
             }
 
             case '"': {
                 string s = str();
-                return new Token(TokenType.String, Variant(s));
+                return new Token(TokenType.STRING, Variant(s));
             }
 
             case '%': {
                 advance(1);
-                return new Token(TokenType.Mod, Variant("%"));
+                return new Token(TokenType.MOD, Variant("%"));
             }
 
             case '^': {
                 advance(1);
-                return new Token(TokenType.Carrot, Variant("^"));
+                return new Token(TokenType.CARROT, Variant("^"));
             }
 
             case ';': {
                 advance(1);
-                return new Token(TokenType.SemiColon, Variant(";"));
+                return new Token(TokenType.SEMICOLON, Variant(";"));
             }
 
             case '{': {
                 advance(1);
-                return new Token(TokenType.Left_Bracket, Variant("{"));
+                return new Token(TokenType.LEFT_BRACKET, Variant("{"));
             }
 
             case '}': {
                 advance(1);
-                return new Token(TokenType.Right_Bracket, Variant("}"));
+                return new Token(TokenType.RIGHT_BRACKET, Variant("}"));
             }
 
             case '[': {
                 advance(1);
-                return new Token(TokenType.Left_Square, Variant("["));
+                return new Token(TokenType.LEFT_SQUARE, Variant("["));
             }
 
             case ']': {
                 advance(1);
-                return new Token(TokenType.Right_Square, Variant("]"));
+                return new Token(TokenType.RIGHT_SQUARE, Variant("]"));
             }
 
             case ':' : {
@@ -194,7 +194,7 @@ class Tokenizer {
                 // allow spaces after : and before type
                 while (isWhite(source[current])) advance(1);
                 string ident = identifier();
-                return new Token(TokenType.Colon, Variant(ident));
+                return new Token(TokenType.COLON, Variant(ident));
             }
       
             case ' ': case '\t': advance(1); return next();
@@ -204,43 +204,43 @@ class Tokenizer {
                     auto num = number();
                         
                     if (num.type == typeid(float)) {
-                        return new Token(TokenType.Float, Variant(num));
+                        return new Token(TokenType.FLOAT, Variant(num));
                     } else if (num.type == typeid(int)) {
-                        return new Token(TokenType.Int, Variant(num));
+                        return new Token(TokenType.INT, Variant(num));
                     }
                 } else if (isAlpha(curr)) {
                     string ident = identifier();
 
                     if (ident == "let") {
-                        return new Token(TokenType.Let, Variant(ident));
+                        return new Token(TokenType.LET, Variant(ident));
                     } else if (ident == "const") {
-                        return new Token(TokenType.Const, Variant(ident));
+                        return new Token(TokenType.CONST, Variant(ident));
                     } else if (ident == "if") {
-                        return new Token(TokenType.If, Variant(ident));
+                        return new Token(TokenType.IF, Variant(ident));
                     } else if (ident == "elif") {
-                        return new Token(TokenType.Elif, Variant(ident));
+                        return new Token(TokenType.ELIF, Variant(ident));
                     } else if (ident == "else") {
-                        return new Token(TokenType.Else, Variant(ident));
+                        return new Token(TokenType.ELSE, Variant(ident));
                     } else if (ident == "while") {
-                        return new Token(TokenType.While, Variant(ident));
+                        return new Token(TokenType.WHILE, Variant(ident));
                     } else if (ident == "for") {
-                        return new Token(TokenType.For, Variant(ident));
+                        return new Token(TokenType.FOR, Variant(ident));
                     } else if (ident == "return") {
-                        return new Token(TokenType.Return, Variant(ident));
+                        return new Token(TokenType.RETURN, Variant(ident));
                     } else if (ident == "fn") {
-                        return new Token(TokenType.Fn, Variant(ident));
+                        return new Token(TokenType.FN, Variant(ident));
                     } else if (ident == "struct") {
-                        return new Token(TokenType.Struct, Variant(ident));
+                        return new Token(TokenType.STRUCT, Variant(ident));
                     }
 
-                    return new Token(TokenType.Identifier, Variant(ident));
+                    return new Token(TokenType.IDENTIFIER, Variant(ident));
                 }
             }
             }
 
         }
 
-        return new Token(TokenType.Eof, Variant("EOF"));
+        return new Token(TokenType.EOF, Variant("EOF"));
     }
 
     Variant number() {
@@ -298,7 +298,7 @@ class Tokenizer {
 
     void debug_print() {
         Token token = next();
-        while (token.type != TokenType.Eof) {
+        while (token.type != TokenType.EOF) {
             writeln(token);    
             token = next();
         }
