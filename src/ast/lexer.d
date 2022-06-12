@@ -1,3 +1,5 @@
+module ast.lexer;
+
 import std.variant;
 import std.typecons;
 import std.format;

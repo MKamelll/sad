@@ -1,13 +1,13 @@
-module parser;
+module ast.parser;
 
 import std.algorithm;
 import std.exception;
 import std.stdio;
 import std.typecons;
 
-import error;
-import lexer;
-import astnode;
+import ast.error;
+import ast.lexer;
+import ast.astnode;
 
 enum Assoc {
     LEFT, RIGHT, NONE

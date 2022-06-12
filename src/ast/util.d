@@ -1,4 +1,4 @@
-module util;
+module ast.util;
 
 string generateSeparator(string ch, string line) {
     string result = "";

@@ -1,4 +1,4 @@
-module astnode;
+module ast.astnode;
 
 import std.variant;
 import std.conv;

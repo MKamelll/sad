@@ -1,6 +1,6 @@
-module error;
+module ast.error;
 
-import util;
+import ast.util;
 import std.conv;
 
 class ParseError : Exception
