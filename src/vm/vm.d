@@ -18,16 +18,18 @@ class Vm
     Instruction mCurrInstruction;
     int mIp;
     int mSp;
+    bool mHalt;
 
     this (Instruction[] program) {
         mProgram = program;
         mStack = [];
         mIp = 0;
         mSp = -1;
+        mHalt = false;
     }
 
     bool isAtEnd() {
-        if (mIp < mProgram.length) {
+        if (!mHalt && mIp < mProgram.length) {
             return false;
         }
 
@@ -74,10 +76,7 @@ class Vm
     }
 
     Instruction advance() {
-        if (mIp < 0) throw new Exception("The program doesn't have any instructions");
-        if (!isAtEnd()) {
-            mCurrInstruction = mProgram[mIp++];
-        }
+        mCurrInstruction = mProgram[mIp++];
         return mCurrInstruction;
     }
 
@@ -103,6 +102,7 @@ class Vm
                 case Opcode.MULF: mulFloat(); break;
                 case Opcode.DIVF: divFloat(); break;
                 case Opcode.SUBF: subFloat(); break;
+                case Opcode.HALT: halt(); break;
                 default: throw new VmError("Unkown Machine Instruction: '" ~ to!string(curr.getOpcode()) ~ "'");
             }
         }
@@ -195,5 +195,10 @@ class Vm
         float firstOperand = pop!float;
         float secondOperand = pop!float;
         push!float(secondOperand - firstOperand);
+    }
+
+    // halt
+    void halt() {
+        mHalt = true;
     }
 }

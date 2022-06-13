@@ -197,8 +197,16 @@ class Program
         if (match("divf")) {
             return new Instruction(Opcode.DIVF);
         }
+
+        return generateHalt();
+    }
+
+    // halt
+    Instruction generateHalt() {
+        if (match("halt")) {
+            return new Instruction(Opcode.HALT);
+        }
        
        throw new VmError("Unknown opcode '" ~ mCurrLine[0] ~ "'");
-
     }
 }
