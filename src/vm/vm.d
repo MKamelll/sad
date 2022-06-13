@@ -43,12 +43,10 @@ class Vm
         Variant elm = mStack[mSp--];
         mStack.popBack();
 
-        try {
-            return elm.get!T; 
-        } catch (Exception err) {
-            throw new VmError("On opcode '" ~ to!string(mCurrInstruction.mOpcode)
-                ~ "' :" ~ err.msg.findSplit("Variant:")[2]);
-        }
+        if (elm.peek!T) return elm.get!T; 
+        
+        throw new VmError("On opcode '" ~ to!string(mCurrInstruction.mOpcode)
+            ~ "' expected type '" ~ to!string(typeid(T)) ~ "' instead got '" ~ to!string(elm.type) ~ "'");
     }
 
     void push(T)(string value) {
