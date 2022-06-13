@@ -59,13 +59,21 @@ class Program
         return mPrevLine;
     }
 
+    string prevOpCode() {
+        return previous()[0];
+    }
+
+    string[] prevOperands() {
+        return previous()[1..$];
+    }
+
     string[] fetchOperands(int expectedNumber) {
-        string[] operands = previous()[1..$];
+        string[] operands = prevOperands();
         if (operands.length == expectedNumber) {
             return operands;
         }
 
-        throw new VmError("Expected '" ~ to!string(expectedNumber) 
+        throw new VmError("For opcode '" ~ to!string(prevOpCode()) ~ "' expected '" ~ to!string(expectedNumber) 
             ~ "' operands instead got '" ~ to!string(operands.length) ~ "'");
     }
 
@@ -196,6 +204,100 @@ class Program
     Instruction generateDivFloat() {
         if (match("divf")) {
             return new Instruction(Opcode.DIVF);
+        }
+
+        return generatePushBool();
+    }
+
+    // bool
+    Instruction generatePushBool() {
+        if (match("pushb")) {
+            string[] operand = fetchOperands(1);
+            return new Instruction(Opcode.PUSHB, operand[0]);
+        }
+        
+        return generateJmp();
+    }
+
+    // jmp
+    Instruction generateJmp() {
+        if (match("jmp")) {
+            string[] operands = fetchOperands(1);
+            return new Instruction(Opcode.JMP, operands[0]);
+        }
+        
+        return generateJe();
+    }
+
+    Instruction generateJe() {
+        if (match("je")) {
+            string[] operands = fetchOperands(1);
+            return new Instruction(Opcode.JE, operands[0]);
+        }
+        
+        return generateJg();
+    }
+
+    
+    Instruction generateJg() {
+        if (match("jg")) {
+            string[] operands = fetchOperands(1);
+            return new Instruction(Opcode.JG, operands[0]);
+        }
+        
+        return generateJl();
+    }
+
+    
+    Instruction generateJl() {
+        if (match("jl")) {
+            string[] operands = fetchOperands(1);
+            return new Instruction(Opcode.JL, operands[0]);
+        }
+        
+        return generateJge();
+    }
+
+    
+    Instruction generateJge() {
+        if (match("jge")) {
+            string[] operands = fetchOperands(1);
+            return new Instruction(Opcode.JGE, operands[0]);
+        }
+        
+        return generateJle();
+    }
+
+    
+    Instruction generateJle() {
+        if (match("jle")) {
+            string[] operands = fetchOperands(1);
+            return new Instruction(Opcode.JLE, operands[0]);
+        }
+        
+        return generateCmpInt();
+    }
+
+    // cmp
+    Instruction generateCmpInt() {
+        if (match("cmpi")) {
+            return new Instruction(Opcode.CMPI);
+        }
+
+        return generateCmpFloat();
+    }
+
+    Instruction generateCmpFloat() {
+        if (match("cmpf")) {
+            return new Instruction(Opcode.CMPF);
+        }
+
+        return generateCmpLong();
+    }
+
+    Instruction generateCmpLong() {
+        if (match("cmpl")) {
+            return new Instruction(Opcode.CMPL);
         }
 
         return generateHalt();

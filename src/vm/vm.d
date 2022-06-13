@@ -47,7 +47,7 @@ class Vm
 
         if (elm.peek!T) return elm.get!T; 
         
-        throw new VmError("On opcode '" ~ to!string(mCurrInstruction.mOpcode)
+        throw new VmError("For opcode '" ~ to!string(mCurrInstruction.mOpcode)
             ~ "' expected type '" ~ to!string(typeid(T)) ~ "' instead got '" ~ to!string(elm.type) ~ "'");
     }
 
@@ -85,23 +85,45 @@ class Vm
         while (!isAtEnd()) {
             Instruction curr = advance();
             switch (curr.getOpcode()) {
+
+                // int
                 case Opcode.PUSHI: pushInt(); break;
                 case Opcode.ADDI: addInt(); break;
                 case Opcode.MULI: mulInt(); break;
                 case Opcode.DIVI: divInt(); break;
                 case Opcode.SUBI: subInt(); break;
                 
+                // long
                 case Opcode.PUSHL: pushLong(); break;
                 case Opcode.ADDL: addLong(); break;
                 case Opcode.MULL: mulLong(); break;
                 case Opcode.DIVL: divLong(); break;
                 case Opcode.SUBL: subLong(); break;
 
+                // float
                 case Opcode.PUSHF: pushFloat(); break;
                 case Opcode.ADDF: addFloat(); break;
                 case Opcode.MULF: mulFloat(); break;
                 case Opcode.DIVF: divFloat(); break;
                 case Opcode.SUBF: subFloat(); break;
+
+                // bool
+                case Opcode.PUSHB: pushBool(); break;
+                
+                // jmp
+                case Opcode.JMP: jump(); break;
+                case Opcode.JE: jumpIfEqual(); break;
+                case Opcode.JG: jumpIfGreater(); break;
+                case Opcode.JL: jumpIfLess(); break;
+                case Opcode.JGE: jumpIfGreaterOrEqual(); break;
+                case Opcode.JLE: jumpIfLessOrEqual(); break;
+
+                // cmp
+                case Opcode.CMPI: compareInt(); break;
+                case Opcode.CMPF: compareFloat(); break;
+                case Opcode.CMPL: compareLong(); break;
+                
+                // halt
                 case Opcode.HALT: halt(); break;
                 default: throw new VmError("Unkown Machine Instruction: '" ~ to!string(curr.getOpcode()) ~ "'");
             }
@@ -195,6 +217,116 @@ class Vm
         float firstOperand = pop!float;
         float secondOperand = pop!float;
         push!float(secondOperand - firstOperand);
+    }
+
+    // bool
+    void pushBool() {
+        push!bool(mCurrInstruction.mOperand1.get);
+    }
+
+    // jmp
+    void jump() {
+        pop!bool;
+        
+        int destination = to!int(mCurrInstruction.mOperand1.get);
+        mIp = destination;
+    }
+
+    void jumpIfEqual() {
+        int operand = pop!int;
+
+        if (operand == 0) {
+            int destinarion = to!int(mCurrInstruction.mOperand1.get);
+            mIp = destinarion;
+        }
+    }
+
+    void jumpIfGreater() {
+        int operand = pop!int;
+
+        if (operand == 1) {
+            int destinarion = to!int(mCurrInstruction.mOperand1.get);
+            mIp = destinarion;
+        }
+    }
+
+    void jumpIfLess() {
+        int operand = pop!int;
+
+        if (operand == -1) {
+            int destinarion = to!int(mCurrInstruction.mOperand1.get);
+            mIp = destinarion;
+        }
+    }
+
+    void jumpIfGreaterOrEqual() {
+        int operand = pop!int;
+
+        if (operand == 2) {
+            int destinarion = to!int(mCurrInstruction.mOperand1.get);
+            mIp = destinarion;
+        }
+    }
+
+    void jumpIfLessOrEqual() {
+        int operand = pop!int;
+
+        if (operand == -2) {
+            int destinarion = to!int(mCurrInstruction.mOperand1.get);
+            mIp = destinarion;
+        }
+    }
+
+    // cmp
+    void compareInt() {
+        int firstOperand = pop!int;
+        int secondOperand = pop!int;
+
+        if (secondOperand == firstOperand) {
+            push!int(0);
+        } else if (secondOperand > firstOperand) {
+            push!int(1);
+        } else if (secondOperand < firstOperand) {
+            push!int(-1);
+        } else if (secondOperand >= firstOperand) {
+            push!int(2);
+        } else if (secondOperand <= firstOperand) {
+            push!int(-2);
+        }
+    }
+
+    void compareFloat() {
+        float firstOperand = pop!float;
+        float secondOperand = pop!float;
+
+        if (secondOperand == firstOperand) {
+            push!int(0);
+        } else if (secondOperand > firstOperand) {
+            push!int(1);
+        } else if (secondOperand < firstOperand) {
+            push!int(-1);
+        } else if (secondOperand >= firstOperand) {
+            push!int(2);
+        } else if (secondOperand <= firstOperand) {
+            push!int(-2);
+        }
+    }
+
+    void compareLong() {
+        long firstOperand = pop!long;
+        long secondOperand = pop!long;
+
+        if (secondOperand == firstOperand) {
+            push!int(0);
+        } else if (secondOperand > firstOperand) {
+            push!int(1);
+        } else if (secondOperand < firstOperand) {
+            push!int(-1);
+        } else if (secondOperand >= firstOperand) {
+            push!int(2);
+        } else if (secondOperand <= firstOperand) {
+            push!int(-2);
+        }
     }
 
     // halt

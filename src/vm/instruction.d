@@ -6,12 +6,16 @@ import std.conv;
 enum Opcode : ushort
 {
     PUSHI, PUSHF, PUSHL,
+    PUSHB,
     
     ADDI, ADDF, ADDL,
     SUBI, SUBF, SUBL,
     MULI, MULF, MULL,
     DIVI, DIVF, DIVL,
 
+    CMPI, CMPF, CMPL,
+
+    JMP, JE, JG, JL, JGE, JLE,
     HALT
 }
 
