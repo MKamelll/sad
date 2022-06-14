@@ -4,11 +4,6 @@ import ast.lexer;
 import ast.parser;
 import ast.error;
 
-import vm.program;
-import vm.instruction;
-import vm.vm;
-import vm.error;
-
 import std.stdio;
 import std.algorithm;
 import std.string : strip;
@@ -16,9 +11,7 @@ import std.string : strip;
 void run(string src) {
     auto lexer = new Tokenizer(src);
     auto ast = new Ast(lexer);
-    auto program = new Program(src).generate();
-    auto vm = new Vm(program);
-    writeln(vm.run());
+    writeln(ast.parse());
 }
 
 int main() {
@@ -42,9 +35,6 @@ int main() {
                 run(line);
 
             } catch (ParseError err) {
-                writeln(err);
-                continue;
-            } catch (VmError err) {
                 writeln(err);
                 continue;
             }
