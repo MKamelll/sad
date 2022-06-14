@@ -80,6 +80,24 @@ class Vm
         return mCurrInstruction;
     }
 
+    T stackGetAt(T) (int index) {
+        Variant elm = mStack[index];
+
+        if (elm.peek!T) return elm.get!T;
+
+        throw new VmError("For opcode '" ~ to!string(mCurrInstruction.mOpcode)
+            ~ "' expected type '" ~ to!string(typeid(T)) ~ "' instead got '" ~ to!string(elm.type) ~ "'");
+    }
+
+    void stackSetAt(T) (int index, T newVal) {
+        try {
+            mStack[index] = Variant(to!T(newVal));
+        }  catch (Exception err) {
+            throw new VmError("Opcode '" ~ to!string(mCurrInstruction.mOpcode)
+                ~ "' doesn't match operand '" ~ mCurrInstruction.mOperand1.get ~ "': " ~ err.msg);
+        }
+    }
+
     Variant[] run() {
 
         while (!isAtEnd()) {
@@ -122,6 +140,11 @@ class Vm
                 case Opcode.CMPI: compareInt(); break;
                 case Opcode.CMPF: compareFloat(); break;
                 case Opcode.CMPL: compareLong(); break;
+
+                // dec
+                case Opcode.DECI: decrementInt(); break;
+                case Opcode.DECF: decrementFloat(); break;
+                case Opcode.DECL: decrementLong(); break;
                 
                 // halt
                 case Opcode.HALT: halt(); break;
@@ -244,7 +267,7 @@ class Vm
     void jumpIfGreater() {
         int operand = pop!int;
 
-        if (operand == 1) {
+        if (operand > 0) {
             int destinarion = to!int(mCurrInstruction.mOperand1.get);
             mIp = destinarion;
         }
@@ -253,7 +276,7 @@ class Vm
     void jumpIfLess() {
         int operand = pop!int;
 
-        if (operand == -1) {
+        if (operand < 0) {
             int destinarion = to!int(mCurrInstruction.mOperand1.get);
             mIp = destinarion;
         }
@@ -262,7 +285,7 @@ class Vm
     void jumpIfGreaterOrEqual() {
         int operand = pop!int;
 
-        if (operand == 2) {
+        if (operand == 0 || operand > 0) {
             int destinarion = to!int(mCurrInstruction.mOperand1.get);
             mIp = destinarion;
         }
@@ -271,7 +294,7 @@ class Vm
     void jumpIfLessOrEqual() {
         int operand = pop!int;
 
-        if (operand == -2) {
+        if (operand == 0 || operand < 0) {
             int destinarion = to!int(mCurrInstruction.mOperand1.get);
             mIp = destinarion;
         }
@@ -288,10 +311,6 @@ class Vm
             push!int(1);
         } else if (secondOperand < firstOperand) {
             push!int(-1);
-        } else if (secondOperand >= firstOperand) {
-            push!int(2);
-        } else if (secondOperand <= firstOperand) {
-            push!int(-2);
         }
     }
 
@@ -305,10 +324,6 @@ class Vm
             push!int(1);
         } else if (secondOperand < firstOperand) {
             push!int(-1);
-        } else if (secondOperand >= firstOperand) {
-            push!int(2);
-        } else if (secondOperand <= firstOperand) {
-            push!int(-2);
         }
     }
 
@@ -322,11 +337,38 @@ class Vm
             push!int(1);
         } else if (secondOperand < firstOperand) {
             push!int(-1);
-        } else if (secondOperand >= firstOperand) {
-            push!int(2);
-        } else if (secondOperand <= firstOperand) {
-            push!int(-2);
         }
+    }
+
+    // dec
+    void decrementInt() {
+        push!int(mCurrInstruction.mOperand1.get);
+        int index = pop!int;
+        int newVal = stackGetAt!int(index);
+
+        --newVal;
+        stackSetAt!int(index, newVal);
+        push!int(newVal);
+    }
+
+    void decrementFloat() {
+        push!int(mCurrInstruction.mOperand1.get);
+        int index = pop!int;
+        float newVal = stackGetAt!float(index);
+
+        --newVal;
+        stackSetAt!float(index, newVal);
+        push!float(newVal);
+    }
+    
+    void decrementLong() {
+        push!int(mCurrInstruction.mOperand1.get);
+        int index = pop!int;
+        long newVal = stackGetAt!long(index);
+
+        --newVal;
+        stackSetAt!long(index, newVal);
+        push!long(newVal);
     }
 
     // halt

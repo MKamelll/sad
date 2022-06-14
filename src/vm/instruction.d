@@ -12,6 +12,7 @@ enum Opcode : ushort
     SUBI, SUBF, SUBL,
     MULI, MULF, MULL,
     DIVI, DIVF, DIVL,
+    DECI, DECF, DECL,
 
     CMPI, CMPF, CMPL,
 

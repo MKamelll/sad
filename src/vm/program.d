@@ -300,6 +300,34 @@ class Program
             return new Instruction(Opcode.CMPL);
         }
 
+        return generateDecInt();
+    }
+
+    // dec
+    Instruction generateDecInt() {
+        if (match("deci")) {
+            string[] operand = fetchOperands(1);
+            return new Instruction(Opcode.DECI, operand[0]);
+        }
+
+        return generateDecFloat();
+    }
+
+    Instruction generateDecFloat() {
+        if (match("decf")) {
+            string[] operand = fetchOperands(1);
+            return new Instruction(Opcode.DECF, operand[0]);
+        }
+
+        return generateDecLong();
+    }
+
+    Instruction generateDecLong() {
+        if (match("decl")) {
+            string[] operand = fetchOperands(1);
+            return new Instruction(Opcode.DECL, operand[0]);
+        }
+
         return generateHalt();
     }
 
