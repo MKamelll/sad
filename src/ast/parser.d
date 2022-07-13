@@ -64,7 +64,7 @@ class Ast
     }
 
     bool isAtEnd() {
-        if (mCurrToken.type == TokenType.EOF) {
+        if (mCurrToken.getType() == TokenType.EOF) {
             return true;
         }
 
@@ -72,7 +72,7 @@ class Ast
     }
 
     bool check(TokenType type) {
-        if (mCurrToken.type == type)
+        if (mCurrToken.getType() == type)
             return true;
         
         return false;
@@ -97,7 +97,7 @@ class Ast
 
     
     bool checkPrevious(TokenType type) {
-        if (previous().type == type) {
+        if (previous().getType() == type) {
             return true;
         }
 
@@ -105,7 +105,7 @@ class Ast
     }
 
     ParseError expected(TokenType type, string hint = "") {
-        string err  = "Expected '" ~ type ~ "' instead got '" ~ mCurrToken.lexeme.toString() ~ "'";
+        string err  = "Expected '" ~ type ~ "' instead got '" ~ mCurrToken.getLexeme().toString() ~ "'";
 
         if (hint.length >= 1) 
             err ~= "\n |=> Hint: " ~ hint;
@@ -131,7 +131,7 @@ class Ast
         AstNode lhs = parsePrimary();
 
          while (!isAtEnd()) {
-            string op = mCurrToken.lexeme.toString();
+            string op = mCurrToken.getLexeme().toString();
             auto opInfo = getPrecAndAssoc(op);
 
             if (opInfo.mPrec == -1 || opInfo.mPrec < minPrec) break;
@@ -155,7 +155,7 @@ class Ast
 
     AstNode parseNumber() {
         if (match(TokenType.INT, TokenType.FLOAT)) {
-            AstNode node = new AstNode.NumberNode(previous().lexeme);
+            AstNode node = new AstNode.NumberNode(previous().getLexeme());
             return node;
         }
 
@@ -168,11 +168,11 @@ class Ast
             
             if (match(TokenType.COLON)) {
                 Token type = previous();
-                AstNode node = new AstNode.IdentifierNode(identifier.lexeme, type.lexeme.toString());
+                AstNode node = new AstNode.IdentifierNode(identifier.getLexeme(), type.getLexeme().toString());
                 return node;
             }
             
-            AstNode node = new AstNode.IdentifierNode(identifier.lexeme);
+            AstNode node = new AstNode.IdentifierNode(identifier.getLexeme());
             return node;
 
         }
@@ -181,7 +181,7 @@ class Ast
 
     AstNode parsePrefix() {
         if (match(TokenType.MINUS, TokenType.BANG, TokenType.PLUS, TokenType.PLUS_PLUS)) {
-            string op = previous().lexeme.toString();
+            string op = previous().getLexeme().toString();
             AstNode rhs = parsePrimary();
             return new AstNode.PrefixNode(op, rhs);
         }
@@ -231,7 +231,7 @@ class Ast
     Nullable!(AstNode.AnonymousFunction) parseAnonFn(AstNode[] paren) {
         Nullable!string returnType;
         if (match(TokenType.COLON)) {
-            returnType = previous().lexeme.toString();
+            returnType = previous().getLexeme().toString();
         }
         
         if (check(TokenType.LEFT_BRACKET)) {
@@ -398,7 +398,7 @@ class Ast
             return new AstNode.AnonymousStruct(block);
         }
         
-        throw new ParseError("Expected a primary instead got '" ~ mCurrToken.lexeme.toString() ~ "'");     
+        throw new ParseError("Expected a primary instead got '" ~ mCurrToken.getLexeme().toString() ~ "'");     
     }
 
 }

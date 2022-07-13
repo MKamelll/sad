@@ -19,49 +19,57 @@ enum TokenType {
 }
 
 class Token {
-    TokenType type;
-    Variant lexeme;
+    TokenType mType;
+    Variant mLexeme;
 
     this(TokenType type, Variant lexeme) {
-        this.type = type;
-        this.lexeme = lexeme;
+        mType = type;
+        mLexeme = lexeme;
     }
 
     override string toString() const {
-        if (lexeme.peek!(int) !is null) {
-            return format("Token(type: %s, lexeme: %s)", to!string(type), lexeme.get!(int));
-        } else if (lexeme.peek!(float) !is null) {
-            return format("Token(type: %s, lexeme: %s)", to!string(type), lexeme.get!(float));
+        if (mLexeme.peek!(int) !is null) {
+            return format("Token(type: %s, lexeme: %s)", to!string(mType), mLexeme.get!(int));
+        } else if (mLexeme.peek!(float) !is null) {
+            return format("Token(type: %s, lexeme: %s)", to!string(mType), mLexeme.get!(float));
         }
         
-        return format("Token(type: %s, lexeme: '%s')", to!string(type), lexeme.get!(string));
+        return format("Token(type: %s, lexeme: '%s')", to!string(mType), mLexeme.get!(string));
+    }
+
+    TokenType getType() {
+        return mType;
+    }
+
+    Variant getLexeme() {
+        return mLexeme;
     }
 }
 
 class Tokenizer {
-    string source;
-    int current;
+    string mSrc;
+    int mCurrent;
 
     this(string source) {
-        this.source = source;
-        this.current = 0;
+        mSrc = source;
+        mCurrent = 0;
     }
 
     Nullable!char peek() {
-        if (current + 1 < source.length) {
-            return Nullable!char(source[current+1]);
+        if (mCurrent + 1 < mSrc.length) {
+            return Nullable!char(mSrc[mCurrent+1]);
         }
 
         return Nullable!char.init;
     }
 
     void advance(int num) {
-        current += num;
+        mCurrent += num;
     }
 
     auto next() {
-        if (current < source.length) {
-            char curr = source[current];           
+        if (mCurrent < mSrc.length) {
+            char curr = mSrc[mCurrent];           
             switch (curr) {
             case '=': {
                 if (!peek().isNull && peek() == '=') {
@@ -194,7 +202,7 @@ class Tokenizer {
             case ':' : {
                 advance(1);
                 // allow spaces after : and before type
-                while (isWhite(source[current])) advance(1);
+                while (isWhite(mSrc[mCurrent])) advance(1);
                 string ident = identifier();
                 return new Token(TokenType.COLON, Variant(ident));
             }
@@ -249,8 +257,8 @@ class Tokenizer {
         bool isFloat = false;
         string result;
 
-        while (current < source.length) {
-            char curr = source[current];
+        while (mCurrent < mSrc.length) {
+            char curr = mSrc[mCurrent];
             if (!isDigit(curr)) break;
 
             result ~= curr;
@@ -271,8 +279,8 @@ class Tokenizer {
     string identifier() {
         string result;
 
-        while (current < source.length) {
-            char curr = source[current];
+        while (mCurrent < mSrc.length) {
+            char curr = mSrc[mCurrent];
             if (!isAlpha(curr)) break;
 
             result ~= curr;
@@ -286,8 +294,8 @@ class Tokenizer {
         string result;
         
         advance(1);
-        while (current < source.length) {
-            char curr = source[current];
+        while (mCurrent < mSrc.length) {
+            char curr = mSrc[mCurrent];
             if (curr == '"') break;
 
             result ~= curr;
@@ -300,7 +308,7 @@ class Tokenizer {
 
     void debug_print() {
         Token token = next();
-        while (token.type != TokenType.EOF) {
+        while (token.getType() != TokenType.EOF) {
             writeln(token);    
             token = next();
         }
