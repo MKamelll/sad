@@ -3,19 +3,34 @@ module ast.astnode;
 import std.variant;
 import std.conv;
 import std.typecons;
+import compiler.visitor;
 
 abstract class AstNode {
 
+    abstract void accept(Visitor v);
+    
     static class PrimaryNode : AstNode
     {
-        Variant mVal;
+        private Variant mVal;
 
         this(Variant val) {
             mVal = val;
         }
 
+        Variant getValue() {
+            return mVal;
+        }
+
+        string getValueStr() {
+            return mVal.toString();
+        }
+
         override string toString() {
             return "Primary(" ~ mVal.toString() ~ ")";
+        }
+
+        override void accept(Visitor v) {
+            v.visit(this);
         }
 
     }
@@ -28,6 +43,10 @@ abstract class AstNode {
 
         override string toString() {
             return "Number(" ~ mVal.toString() ~ ")";
+        }
+
+        override void accept(Visitor v) {
+            v.visit(this);
         }
     }
 
@@ -44,8 +63,9 @@ abstract class AstNode {
             mType = type;
         }
 
-        Nullable!string getType() {
-            return mType;
+        string getType() {
+            if (mType.isNull) return "auto";
+            return mType.toString();
         }
 
         override string toString() {
@@ -54,13 +74,17 @@ abstract class AstNode {
             
             return "Identifier(value: " ~ mVal.toString() ~ ")";
         }
+
+        override void accept(Visitor v) {
+            v.visit(this);
+        }
     }
 
     static class BinaryNode : AstNode
     {
-        string mOp;
-        AstNode mLhs;
-        AstNode mRhs;
+        private string mOp;
+        private AstNode mLhs;
+        private AstNode mRhs;
 
         this(string op, AstNode lhs, AstNode rhs) {
             mOp = op;
@@ -68,41 +92,80 @@ abstract class AstNode {
             mRhs = rhs;
         }
 
+        string getOp() {
+            return mOp;
+        }
+
+        AstNode getLhs() {
+            return mLhs;
+        }
+
+        AstNode getRhs() {
+            return mRhs;
+        }
+        
         override string toString() {
             return "Binary(op: '" ~ mOp ~ "'" ~ ", lhs: " ~ mLhs.toString() ~ ", rhs: " ~ mRhs.toString() ~ ")";
         }
 
+        override void accept(Visitor v) {
+            v.visit(this);
+        }
+
     }
 
-    
     static class PrefixNode : AstNode
     {
-        string mOp;
-        AstNode mRhs;
+        private string mOp;
+        private AstNode mRhs;
 
         this (string op, AstNode rhs) {
             mOp = op;
             mRhs = rhs;
         }
 
+        string getOp() {
+            return mOp;
+        }
+
+        AstNode getRhs() {
+            return mRhs;
+        }
+
         override string toString() {
             return "Prefix(op: '" ~ mOp ~ "', rhs: " ~ mRhs.toString() ~ ")";
+        }
+
+        override void accept(Visitor v) {
+            v.visit(this);
         }
     }
 
     
     static class LetDefinitionNode : AstNode
     {
-        AstNode mIdentifier;
-        AstNode mRhs;
+        private AstNode mIdentifier;
+        private AstNode mRhs;
 
         this (AstNode identifier, AstNode rhs) {
             mIdentifier = identifier;
             mRhs = rhs;
         }
 
+        AstNode getIdentifier() {
+            return mIdentifier;
+        }
+
+        AstNode getRhs() {
+            return mRhs;
+        }
+
         override string toString() {
             return "Let(identifier: " ~ mIdentifier.toString() ~  ", rhs: " ~ mRhs.toString() ~ ")";
+        }
+
+        override void accept(Visitor v) {
+            v.visit(this);
         }
     }
 
@@ -114,8 +177,16 @@ abstract class AstNode {
             mIdentifier = identifier;
         }
 
+        AstNode getIdentifier() {
+            return mIdentifier;
+        }
+
         override string toString() {
             return "Let(identifier: " ~ mIdentifier.toString() ~ ")";
+        }
+
+        override void accept(Visitor v) {
+            v.visit(this);
         }
     }
 
@@ -132,6 +203,10 @@ abstract class AstNode {
         override string toString() {
             return "Const(identifier: " ~ mIdentifier.toString() ~ ", rhs: " ~ mRhs.toString() ~ ")";
         }
+
+        override void accept(Visitor v) {
+            v.visit(this);
+        }
     }
 
     static class BlockNode : AstNode
@@ -145,6 +220,10 @@ abstract class AstNode {
         override string toString() {
             return "Block(" ~ to!string(mSubtree) ~ ")";
         }
+
+        override void accept(Visitor v) {
+            v.visit(this);
+        }
     }
 
     static class ParanNode : BlockNode
@@ -155,6 +234,10 @@ abstract class AstNode {
 
         override string toString() {
             return "Paren(" ~ to!string(mSubtree) ~ ")";
+        }
+
+        override void accept(Visitor v) {
+            v.visit(this);
         }
     }
 
@@ -171,6 +254,10 @@ abstract class AstNode {
         override string toString() {
             return "Fn(identifier: " ~ mIdentifier.toString() ~ ", AnnonFn: " ~ mAnnonFn.toString() ~ ")";
         }
+
+        override void accept(Visitor v) {
+            v.visit(this);
+        }
     }
 
     static class ConstFunctionNode : FunctionNode
@@ -181,6 +268,10 @@ abstract class AstNode {
 
         override string toString() {
             return "ConstFn(identifier: " ~ mIdentifier.toString() ~ ", AnnonFn: " ~ mAnnonFn.toString() ~ ")";
+        }
+
+        override void accept(Visitor v) {
+            v.visit(this);
         }
     }
 
@@ -208,6 +299,10 @@ abstract class AstNode {
             }
             return "AnonymousFn(params: " ~ mParams.toString() ~ ", block: " ~ mBlock.toString() ~ ")";
         }
+
+        override void accept(Visitor v) {
+            v.visit(this);
+        }
     }
 
     static class IfNode : AstNode
@@ -233,6 +328,10 @@ abstract class AstNode {
             return "If(condition: " ~ mCondition.toString() ~ ", then: " ~ mThenBranch.toString() ~ ", elif: "
                     ~ to!string(mElifBranches) ~ ")";
         }
+
+        override void accept(Visitor v) {
+            v.visit(this);
+        }
     }
 
     static class ForNode : AstNode
@@ -253,6 +352,10 @@ abstract class AstNode {
             return "For(index: " ~ mIndex.toString() ~ ", condition: "
                 ~ to!string(mCondition) ~ ", increment: " ~ mIncrement.toString()
                 ~ ", block: " ~ mBlock.toString() ~ ")";
+        }
+
+        override void accept(Visitor v) {
+            v.visit(this);
         }
     }
 
@@ -279,6 +382,10 @@ abstract class AstNode {
 
             return "While(condition: " ~ mCondition.toString() ~ ")";
         }
+
+        override void accept(Visitor v) {
+            v.visit(this);
+        }
     }
 
     static class AnonymousStruct : AstNode
@@ -291,6 +398,10 @@ abstract class AstNode {
 
         override string toString() {
             return "AnonymusStruct(block: " ~ mBlock.toString() ~ ")";
+        }
+
+        override void accept(Visitor v) {
+            v.visit(this);
         }
     }
 
@@ -307,6 +418,10 @@ abstract class AstNode {
         override string toString() {
             return "Struct(identifier: " ~ mIdentifier.toString()
                 ~ ", anonymousStruct: " ~ mAnonymousStruct.toString() ~ ")";
+        }
+
+        override void accept(Visitor v) {
+            v.visit(this);
         }
     }
 }

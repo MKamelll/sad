@@ -3,6 +3,7 @@ module sad;
 import ast.lexer;
 import ast.parser;
 import ast.error;
+import compiler.transpiler;
 
 import std.stdio;
 import std.algorithm;
@@ -11,7 +12,8 @@ import std.string : strip;
 void run(string src) {
     auto lexer = new Tokenizer(src);
     auto ast = new Ast(lexer);
-    writeln(ast.parse());
+    auto transpiler = new Transpiler(ast.parse());
+    writeln(transpiler.generate());
 }
 
 int main() {
