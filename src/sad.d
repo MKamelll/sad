@@ -36,8 +36,8 @@ int main() {
             try {
                 run(line);
 
-            } catch (ParseError err) {
-                writeln(err);
+            } catch (Exception err) {
+                writeln(err.toString());
                 continue;
             }
         }

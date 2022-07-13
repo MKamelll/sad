@@ -2,6 +2,7 @@ module compiler.transpiler;
 
 import ast.astnode;
 import compiler.visitor;
+import compiler.error;
 
 class Transpiler : Visitor
 {
@@ -99,17 +100,22 @@ class Transpiler : Visitor
         node.getRhs().accept(this);
     }
 
-    void visit(AstNode.LetDefinitionNode node) { 
-        append((cast(AstNode.IdentifierNode) node.getIdentifier()).getType()).space();
-        append((cast(AstNode.IdentifierNode) node.getIdentifier()).getValueStr()).space();
+    void visit(AstNode.LetDefinitionNode node) {
+        AstNode.IdentifierNode id = cast(AstNode.IdentifierNode) node.getIdentifier(); 
+        append(id.getType()).space();
+        append(id.getValueStr()).space();
         append("=").space();
         node.getRhs().accept(this);
         semiColon();
     }
 
     void visit(AstNode.LetDeclarationNode node) {
-        append((cast(AstNode.IdentifierNode) node.getIdentifier()).getType()).space();
-        append((cast(AstNode.IdentifierNode) node.getIdentifier()).getValueStr()).space();
+        AstNode.IdentifierNode id = cast(AstNode.IdentifierNode) node.getIdentifier();
+        if (id.getType() == "auto") {
+            throw new TranspilerError("Missing a type for the variable '" ~ id.getValueStr() ~ "'");
+        }
+        append(id.getType()).space();
+        append(id.getValueStr()).space();
         semiColon();
     }
 
