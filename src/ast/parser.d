@@ -310,8 +310,13 @@ class Ast
 
     AstNode parseIf() {
         if (match(TokenType.IF)) {
+
+            bool isParen = match(TokenType.LEFT_PAREN);
             
             AstNode condition = parseExpr();
+
+            if (isParen && !match(TokenType.RIGHT_PAREN)) throw expected(TokenType.RIGHT_PAREN);
+            
             AstNode thenBranch = parseBlock();
             AstNode[] elifBranches = [];
 
@@ -367,6 +372,7 @@ class Ast
             bool isParen = match(TokenType.LEFT_PAREN);
             
             AstNode condition = parseExpr();
+            writeln(condition);
 
             if (isParen) {
                 if (!match(TokenType.RIGHT_PAREN)) throw expected(TokenType.RIGHT_PAREN);
@@ -374,8 +380,6 @@ class Ast
             
             if (!check(TokenType.LEFT_BRACKET)) {
                 return new AstNode.WhileNode(condition);
-            } else {
-                throw expected(TokenType.LEFT_BRACKET);
             }
             
             AstNode block = parseBlock();
