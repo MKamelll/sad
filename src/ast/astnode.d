@@ -429,6 +429,14 @@ abstract class AstNode {
         AstNode mCondition;
         Nullable!AstNode mBlock;
 
+        AstNode getCondition() {
+            return mCondition;
+        }
+
+        Nullable!AstNode getBlock() {
+            return mBlock;
+        }
+
         this (AstNode condition, AstNode block) {
             mCondition = condition;
             mBlock = block;

@@ -372,7 +372,6 @@ class Ast
             bool isParen = match(TokenType.LEFT_PAREN);
             
             AstNode condition = parseExpr();
-            writeln(condition);
 
             if (isParen) {
                 if (!match(TokenType.RIGHT_PAREN)) throw expected(TokenType.RIGHT_PAREN);

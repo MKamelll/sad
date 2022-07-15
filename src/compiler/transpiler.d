@@ -281,7 +281,17 @@ class Transpiler : Visitor
     }
 
     void visit(AstNode.WhileNode node) {
+        append("while").space();
+        append("(");
+        node.getCondition().accept(this);
+        stripTrailingSemicolon();
+        append(")");
 
+        if (!node.getBlock().isNull) {
+            node.getBlock().get().accept(this);
+        } else {
+            semiColon();
+        }
     }
 
     void visit(AstNode.AnonymousStruct node) {
