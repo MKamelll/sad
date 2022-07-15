@@ -340,16 +340,32 @@ abstract class AstNode {
 
     static class IfNode : AstNode
     {
-        AstNode mCondition;
-        AstNode mThenBranch;
-        AstNode[] mElifBranches;
-        Nullable!AstNode mElseBranch;
+        private AstNode mCondition;
+        private AstNode mThenBranch;
+        private AstNode[] mElifBranches;
+        private Nullable!AstNode mElseBranch;
 
         this (AstNode condition, AstNode thenBranch, AstNode[] elifBranches, Nullable!AstNode elseBranch) {
             mCondition = condition;
             mThenBranch = thenBranch;
             mElifBranches = elifBranches;
             mElseBranch = elseBranch;            
+        }
+
+        AstNode getCondition() {
+            return mCondition;
+        }
+
+        AstNode getThenBranch() {
+            return mThenBranch;
+        }
+
+        AstNode[] getElifBranches() {
+            return mElifBranches;
+        }
+
+        Nullable!AstNode getElseBranch() {
+            return mElseBranch;
         }
 
         override string toString() {
@@ -369,16 +385,32 @@ abstract class AstNode {
 
     static class ForNode : AstNode
     {
-        AstNode mIndex;
-        AstNode mCondition;
-        AstNode mIncrement;
-        AstNode mBlock;
+        private AstNode mIndex;
+        private AstNode mCondition;
+        private AstNode mIncrement;
+        private AstNode mBlock;
 
         this (AstNode index, AstNode condition, AstNode increment, AstNode block) {
             mIndex = index;
             mCondition = condition;
             mIncrement = increment;
             mBlock = block;
+        }
+
+        AstNode getIndex() {
+            return mIndex;
+        }
+
+        AstNode getCondition() {
+            return mCondition;
+        }
+
+        AstNode getIncrement() {
+            return mIncrement;
+        }
+
+        AstNode getBlock() {
+            return mBlock;
         }
 
         override string toString() {

@@ -52,11 +52,24 @@ class Transpiler : Visitor
         return this;
     }
 
-    private Transpiler semiColon() {
+    private Transpiler stripTrailingSemicolon() {
+        foreach_reverse (ch; mProgram) {
+            if (ch != ';') break;
+            mProgram.popBack();
+        }
+        return this;
+    }
+
+    private Transpiler stripTrailingSpaces() {
         foreach_reverse (ch; mProgram) {
             if (!isWhite(ch)) break;
             mProgram.popBack();
         }
+        return this;
+    }
+
+    private Transpiler semiColon() {
+        stripTrailingSpaces().stripTrailingSemicolon();
         append(";");
         return this;
     }
@@ -117,6 +130,7 @@ class Transpiler : Visitor
         node.getLhs().accept(this);
         space().append(node.getOp()).space();
         node.getRhs().accept(this);
+        semiColon();
     }
 
     override void visit(AstNode.PrefixNode node) {
@@ -232,11 +246,38 @@ class Transpiler : Visitor
     }
 
     void visit(AstNode.IfNode node) {
+        append("if").space();
+        append("(");
+        node.getCondition().accept(this);
+        stripTrailingSemicolon();
+        append(")").space();
+        node.getThenBranch().accept(this);
+        auto elifBranches = node.getElifBranches();
+        if (elifBranches.length > 0) {
+            foreach (branch; elifBranches)
+            {
+                append("else if").space();
+                branch.accept(this);
+            }
+        }
+
+        if (!node.getElseBranch().isNull) {
+            node.getElseBranch().get().accept(this);
+        }
 
     }
 
     void visit(AstNode.ForNode node) {
-
+        append("for").space();
+        append("(");
+        node.getIndex().accept(this);
+        semiColon().space();
+        node.getCondition().accept(this);
+        semiColon().space();
+        node.getIncrement().accept(this);
+        stripTrailingSemicolon();
+        append(")").space();
+        node.getBlock().accept(this);
     }
 
     void visit(AstNode.WhileNode node) {
