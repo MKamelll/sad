@@ -171,7 +171,7 @@ abstract class AstNode {
 
     static class LetDeclarationNode : AstNode
     {
-        AstNode mIdentifier;
+        private AstNode mIdentifier;
 
         this (AstNode identifier) {
             mIdentifier = identifier;
@@ -192,12 +192,20 @@ abstract class AstNode {
 
     static class ConstDefinitionNode : AstNode
     {
-        AstNode mIdentifier;
-        AstNode mRhs;
+        private AstNode mIdentifier;
+        private AstNode mRhs;
 
         this (AstNode identifier, AstNode rhs) {
             mIdentifier = identifier;
             mRhs = rhs;
+        }
+
+        AstNode getIdentifier() {
+            return mIdentifier;
+        }
+
+        AstNode getRhs() {
+            return mRhs;
         }
 
         override string toString() {
@@ -211,10 +219,14 @@ abstract class AstNode {
 
     static class BlockNode : AstNode
     {
-        AstNode[] mSubtree;
+        private AstNode[] mSubtree;
 
         this (AstNode[] subtree) {
             mSubtree = subtree;
+        }
+
+        AstNode[] getSubtree() {
+            return mSubtree;
         }
 
         override string toString() {

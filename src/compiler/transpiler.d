@@ -1,5 +1,8 @@
 module compiler.transpiler;
 
+import std.array;
+import std.ascii;
+
 import ast.astnode;
 import compiler.visitor;
 import compiler.error;
@@ -48,6 +51,10 @@ class Transpiler : Visitor
     }
 
     private Transpiler semiColon() {
+        foreach_reverse (ch; mProgram) {
+            if (!isWhite(ch)) break;
+            mProgram.popBack();
+        }
         append(";");
         return this;
     }
@@ -66,6 +73,16 @@ class Transpiler : Visitor
 
     private Transpiler indent() {
         space(mCurrIndentationLevel);
+        return this;
+    }
+
+    private Transpiler incCurrentIndentationLevel(int count = 4) {
+        mCurrIndentationLevel += count;
+        return this;
+    }
+
+    private Transpiler decCurrentIndentationLevel(int count = 4) {
+        mCurrIndentationLevel -= count;
         return this;
     }
 
@@ -120,11 +137,25 @@ class Transpiler : Visitor
     }
 
     void visit(AstNode.ConstDefinitionNode node) {
-
+        append("const").space();
+        AstNode.IdentifierNode id = cast(AstNode.IdentifierNode) node.getIdentifier();
+        append(id.getType()).space();
+        append(id.getValueStr()).space();
+        append("=").space();
+        node.getRhs().accept(this);
+        semiColon();
     }
 
     void visit(AstNode.BlockNode node) {
-
+        eol().indent().append("{").eol();
+        incCurrentIndentationLevel();
+        foreach (n; node.getSubtree())
+        {
+            indent();
+            n.accept(this);
+        }
+        decCurrentIndentationLevel();
+        eol().indent().append("}").eol();
     }
 
     void visit(AstNode.ParanNode node) {
