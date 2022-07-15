@@ -13,16 +13,18 @@ class Transpiler : Visitor
     private string mProgram;
     private int mCurrIndex;
     private int mCurrIndentationLevel;
+    private string mStdImports;
 
     this (AstNode[] subtrees) {
         mSubtrees = subtrees;
         mProgram = "";
         mCurrIndex = 0;
         mCurrIndentationLevel = 0;
+        mStdImports = "";
     }
 
     override string toString() {
-        return mProgram;
+        return mStdImports ~ mProgram;
     }
 
     private bool isAtEnd() {
@@ -86,6 +88,12 @@ class Transpiler : Visitor
         return this;
     }
 
+    private Transpiler addImport(string mod) {
+        append("import").space();
+        append(mod).semiColon().eol();
+        return this;
+    }
+
     Transpiler generate() {
         if (isAtEnd()) return this;
         currNode().accept(this);
@@ -94,21 +102,20 @@ class Transpiler : Visitor
     }
 
     override void visit(AstNode.PrimaryNode node) {
-        append(node.getValueStr()).space();
+        append(node.getValueStr());
     }
 
     override void visit(AstNode.NumberNode node) {
-        append(node.getValueStr()).space();
+        append(node.getValueStr());
     }
 
     override void visit(AstNode.IdentifierNode node) {
-        append(node.getType()).space();
-        append(node.getValueStr()).space();
+        append(node.getValueStr());
     }
 
     override void visit(AstNode.BinaryNode node) {
         node.getLhs().accept(this);
-        append(node.getOp()).space();
+        space().append(node.getOp()).space();
         node.getRhs().accept(this);
     }
 
@@ -159,7 +166,14 @@ class Transpiler : Visitor
     }
 
     void visit(AstNode.ParanNode node) {
-
+        append("(");
+        AstNode[] subtree = node.getSubtree();
+        for (int i = 0; i < subtree.length; i++)
+        {
+            subtree[i].accept(this);
+            if (i + 1 < subtree.length) append(", ");
+        }
+        append(")");
     }
 
     void visit(AstNode.FunctionNode node) {
