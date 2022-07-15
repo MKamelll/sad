@@ -185,7 +185,21 @@ class Transpiler : Visitor
     }
 
     void visit(AstNode.AnonymousFunction node) {
-
+        append("(");
+        AstNode.ParanNode params = cast(AstNode.ParanNode) node.getParams();
+        AstNode[] subtree = params.getSubtree();
+        for (int i = 0; i < subtree.length; i++)
+        {
+            if (AstNode.IdentifierNode id = cast(AstNode.IdentifierNode) subtree[i]) {
+                append(id.getType()).space();
+                append(id.getValueStr());
+            } else {
+                throw new TranspilerError("Expected an identifier after '('");
+            }
+            if (i + 1 < subtree.length) append(", ");
+        }
+        append(")");
+        node.getBlock().accept(this);
     }
 
     void visit(AstNode.IfNode node) {

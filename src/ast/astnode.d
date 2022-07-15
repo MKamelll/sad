@@ -255,12 +255,20 @@ abstract class AstNode {
 
     static class FunctionNode : AstNode
     {
-        AstNode mIdentifier;
-        AstNode mAnnonFn;
+        private AstNode mIdentifier;
+        private AstNode mAnnonFn;
 
         this (AstNode identifier, AstNode annonFn) {
             mIdentifier = identifier;
             mAnnonFn = annonFn;
+        }
+
+        AstNode getIdentifier() {
+            return mIdentifier;
+        }
+
+        AstNode getAnnonFn() {
+            return mAnnonFn;
         }
 
         override string toString() {
@@ -289,9 +297,21 @@ abstract class AstNode {
 
     static class AnonymousFunction : AstNode
     {
-        AstNode mParams;
-        AstNode mBlock;
-        Nullable!string mReturnType;
+        private AstNode mParams;
+        private AstNode mBlock;
+        private Nullable!string mReturnType;
+
+        AstNode getParams() {
+            return mParams;
+        }
+
+        AstNode getBlock() {
+            return mBlock;
+        }
+
+        Nullable!string getReturnType() {
+            return mReturnType;
+        }
 
         this (AstNode params, AstNode block, string returnType) {
             mParams = params;
