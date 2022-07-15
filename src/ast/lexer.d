@@ -207,7 +207,7 @@ class Tokenizer {
                 return new Token(TokenType.COLON, Variant(ident));
             }
       
-            case ' ': case '\t': advance(1); return next();
+            case ' ': case '\t': case '\n': advance(1); return next();
 
             default: {
                 if (isDigit(curr)) {
