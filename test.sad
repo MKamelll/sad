@@ -1,0 +1,3 @@
+fn fac(x: int, result: int): int {
+    if x < 2 { result; };
+}
