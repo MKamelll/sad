@@ -309,8 +309,9 @@ abstract class AstNode {
             return mBlock;
         }
 
-        Nullable!string getReturnType() {
-            return mReturnType;
+        string getReturnType() {
+            if (mReturnType.isNull) return "void";
+            return mReturnType.toString();
         }
 
         this (AstNode params, AstNode block, string returnType) {

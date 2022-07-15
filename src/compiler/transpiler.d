@@ -176,15 +176,7 @@ class Transpiler : Visitor
         append(")");
     }
 
-    void visit(AstNode.FunctionNode node) {
-
-    }
-
-    void visit(AstNode.ConstFunctionNode node) {
-
-    }
-
-    void visit(AstNode.AnonymousFunction node) {
+    private void genAnonymousFn(AstNode.AnonymousFunction node, bool isConst = false) {
         append("(");
         AstNode.ParanNode params = cast(AstNode.ParanNode) node.getParams();
         AstNode[] subtree = params.getSubtree();
@@ -198,8 +190,45 @@ class Transpiler : Visitor
             }
             if (i + 1 < subtree.length) append(", ");
         }
-        append(")");
+        if (isConst) {
+            append(")").space().append("const");
+        } else {
+            append(")");
+        }
         node.getBlock().accept(this);
+    }
+
+    void visit(AstNode.FunctionNode node) {
+        if (AstNode.AnonymousFunction fn = cast(AstNode.AnonymousFunction) node.getAnnonFn()) {
+            append(fn.getReturnType()).space();
+            if (AstNode.IdentifierNode id = cast(AstNode.IdentifierNode) node.getIdentifier()) {
+                append(id.getValueStr()).space();
+            } else {
+                throw new TranspilerError("Expected an identifier after 'fn'");
+            }
+            genAnonymousFn(fn);
+        } else {
+            throw new TranspilerError("Expected a parameters list");
+        }
+    }
+
+    //fixme: we don't parse this yet :(
+    void visit(AstNode.ConstFunctionNode node) {
+        if (AstNode.AnonymousFunction fn = cast(AstNode.AnonymousFunction) node.getAnnonFn()) {
+            append(fn.getReturnType()).space();
+            if (AstNode.IdentifierNode id = cast(AstNode.IdentifierNode) node.getIdentifier()) {
+                append(id.getValueStr()).space();
+            } else {
+                throw new TranspilerError("Expected an identifier after 'fn'");
+            }
+            genAnonymousFn(fn, true);
+        } else {
+            throw new TranspilerError("Expected a parameters list");
+        }
+    }
+
+    void visit(AstNode.AnonymousFunction node) {
+        genAnonymousFn(node);
     }
 
     void visit(AstNode.IfNode node) {
