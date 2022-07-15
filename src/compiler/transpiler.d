@@ -295,10 +295,31 @@ class Transpiler : Visitor
     }
 
     void visit(AstNode.AnonymousStruct node) {
-
+        AstNode.BlockNode b = cast(AstNode.BlockNode) node.getBlock();
+        AstNode[] subtree = b.getSubtree();
+        eol().indent().append("{").eol();
+        incCurrentIndentationLevel();
+        for (int i = 0; i < subtree.length; i++)
+        {
+            
+            if (AstNode.IdentifierNode id = cast(AstNode.IdentifierNode) subtree[i]) {
+                indent().append(id.getType()).space();
+                append(id.getValueStr()).semiColon().eol();
+            } else {
+                throw new TranspilerError("Expected an identifier in a struct definition");
+            }
+        }
+        decCurrentIndentationLevel();
+        eol().indent().append("}").eol();
     }
 
     void visit(AstNode.StructNode node) {
-
+        append("struct").space();
+        if (AstNode.IdentifierNode id = cast(AstNode.IdentifierNode) node.getIdentifier()) {
+            append(id.getValueStr()).space();
+        } else {
+            throw new TranspilerError("Expected an identifier after 'struct'");
+        }
+        node.getAnonymousStruct().accept(this);
     }
 }

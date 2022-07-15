@@ -426,8 +426,8 @@ abstract class AstNode {
 
     static class WhileNode : AstNode
     {
-        AstNode mCondition;
-        Nullable!AstNode mBlock;
+        private AstNode mCondition;
+        private Nullable!AstNode mBlock;
 
         AstNode getCondition() {
             return mCondition;
@@ -463,10 +463,14 @@ abstract class AstNode {
 
     static class AnonymousStruct : AstNode
     {
-        AstNode mBlock;
+        private AstNode mBlock;
 
         this (AstNode block) {
             mBlock = block;
+        }
+
+        AstNode getBlock() {
+            return mBlock;
         }
 
         override string toString() {
@@ -480,12 +484,20 @@ abstract class AstNode {
 
     static class StructNode : AstNode
     {
-        AstNode mIdentifier;
-        AstNode mAnonymousStruct;
+        private AstNode mIdentifier;
+        private AstNode mAnonymousStruct;
 
         this (AstNode identifier, AstNode anstruct) {
             mIdentifier = identifier;
             mAnonymousStruct = anstruct;
+        }
+
+        AstNode getIdentifier() {
+            return mIdentifier;
+        }
+
+        AstNode getAnonymousStruct() {
+            return mAnonymousStruct;
         }
 
         override string toString() {
