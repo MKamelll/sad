@@ -165,18 +165,25 @@ class Ast
     AstNode parseIdentifier() {
         if (match(TokenType.IDENTIFIER)) {
             Token identifier = previous();
+
+            if (check(TokenType.LEFT_PAREN)) return parseCall();
             
             if (match(TokenType.COLON)) {
                 Token type = previous();
-                AstNode node = new AstNode.IdentifierNode(identifier.getLexeme(), type.getLexeme().toString());
-                return node;
+                return new AstNode.IdentifierNode(identifier.getLexeme(), type.getLexeme().toString());
             }
             
-            AstNode node = new AstNode.IdentifierNode(identifier.getLexeme());
-            return node;
-
+            return new AstNode.IdentifierNode(identifier.getLexeme());
         }
+        
         return parsePrefix();
+    }
+
+    AstNode parseCall() {
+        Token identifier = previous();
+        AstNode id = new AstNode.IdentifierNode(identifier.getLexeme(), "call");
+        AstNode paren = parseParen();
+        return new AstNode.CallNode(id, paren);
     }
 
     AstNode parsePrefix() {
@@ -189,61 +196,17 @@ class Ast
     }
 
     AstNode parseParen() {
-        
         if (match(TokenType.LEFT_PAREN)) {
             AstNode[] paren = [];
-            if (match(TokenType.RIGHT_PAREN)) {
-
-                auto anonfn = parseAnonFn(paren);
-
-                if (anonfn.isNull) {
-                    return new AstNode.ParanNode(paren);
-                } else {
-                    return anonfn.get;
-                }
-            }
-            
             paren ~= parseExpr();
-
             while (match(TokenType.COMMA)) {
                 paren ~= parseExpr(); 
             }
-            
-            if (match(TokenType.RIGHT_PAREN)) {
-                
-                auto anonfn = parseAnonFn(paren);
-
-                if (anonfn.isNull) {
-                    return new AstNode.ParanNode(paren);
-                } else {
-                    return anonfn.get;
-                }
-                
-            } else {
-                throw expected(TokenType.RIGHT_PAREN);
-            }
-            
+            if (!match(TokenType.RIGHT_PAREN)) throw expected(TokenType.RIGHT_PAREN);
+            return new AstNode.ParanNode(paren);
         }
 
         return parseLet();
-    }
-    
-    Nullable!(AstNode.AnonymousFunction) parseAnonFn(AstNode[] paren) {
-        Nullable!string returnType;
-        if (match(TokenType.COLON)) {
-            returnType = previous().getLexeme().toString();
-        }
-        
-        if (check(TokenType.LEFT_BRACKET)) {
-            AstNode block = parseBlock();
-
-            if (returnType.isNull)
-                return new AstNode.AnonymousFunction(new AstNode.ParanNode(paren), block).nullable;
-            
-            return new AstNode.AnonymousFunction(new AstNode.ParanNode(paren), block, returnType.get).nullable;
-        }
-
-        return Nullable!(AstNode.AnonymousFunction).init;
     }
 
     AstNode parseLet() {
@@ -265,15 +228,37 @@ class Ast
     }
 
     AstNode parseFn() {
-
         if (match(TokenType.FN)) {
-            AstNode identifier = parseIdentifier();
-            AstNode anonFn = parseExpr();
+            if (!match(TokenType.IDENTIFIER)) throw expected(TokenType.IDENTIFIER);
+            AstNode identifier = new AstNode.IdentifierNode(previous().getLexeme(), "fn");
+            AstNode paren = parseParen();
+            auto anonFn = parseAnonFn(paren);
             
-            return new AstNode.FunctionNode(identifier, anonFn);
+            if (!anonFn.isNull) return new AstNode.FunctionNode(identifier, anonFn.get());
         }
         
         return parseReturn();
+    }
+
+    Nullable!(AstNode.AnonymousFunction) parseAnonFn(AstNode paren) {
+        if (!check(TokenType.COLON) && !check(TokenType.LEFT_BRACKET)) {
+            return Nullable!(AstNode.AnonymousFunction).init;
+        }
+
+        Nullable!string returnType;
+        if (match(TokenType.COLON)) {
+            returnType = previous().getLexeme().toString();
+        }
+        
+        if (check(TokenType.LEFT_BRACKET)) {
+            AstNode block = parseBlock();
+
+            if (returnType.isNull) return new AstNode.AnonymousFunction(paren, block).nullable;
+            
+            return new AstNode.AnonymousFunction(paren, block, returnType.get).nullable;
+        }
+
+        throw expected(TokenType.LEFT_BRACKET);
     }
 
     AstNode parseReturn() {

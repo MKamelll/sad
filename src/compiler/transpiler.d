@@ -328,4 +328,26 @@ class Transpiler : Visitor
         node.getExpr().accept(this);
         semiColon();
     }
+
+    void visit(AstNode.CallNode node) {
+        if (AstNode.IdentifierNode id = cast(AstNode.IdentifierNode) node.getIdentifier()) {
+            append(id.getValueStr());
+            append("(");
+            if (!node.getParen().isNull) {
+                if (AstNode.ParanNode paren = cast(AstNode.ParanNode) node.getParen().get()) {
+                    AstNode[] args = paren.getSubtree();
+                    for (int i = 0; i < args.length; i++) {
+                        args[i].accept(this);
+                        stripTrailingSemicolon();
+                        if (i + 1 < args.length) append(", ");
+                    }
+                }
+            }
+            stripTrailingSemicolon();
+            append(")");
+            semiColon();
+        } else {
+            throw new TranspilerError("Expected an identifier for the function call");
+        }
+    }
 }

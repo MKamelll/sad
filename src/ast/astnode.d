@@ -338,6 +338,40 @@ abstract class AstNode {
         }
     }
 
+    static class CallNode : AstNode
+    {
+        private AstNode mIdentifier;
+        private Nullable!AstNode mParen;
+
+        this (AstNode identifier) {
+            mIdentifier = identifier;
+        }
+        
+        this (AstNode identifier, AstNode paren) {
+            mIdentifier = identifier;
+            mParen = paren;
+        }
+
+        AstNode getIdentifier() {
+            return mIdentifier;
+        }
+
+        Nullable!AstNode getParen() {
+            return mParen;
+        }
+
+        override string toString() {
+            if (!mParen.isNull) {
+                return "Call(identifier: " ~ mIdentifier.toString() ~ ", paren: " ~ mParen.get().toString() ~ ")";
+            }
+            return "Call(identifier: " ~ mIdentifier.toString() ~ ")";
+        }
+
+        override void accept(Visitor v) {
+            v.visit(this);
+        }
+    }
+
     static class ReturnNode : AstNode
     {
         private AstNode mExpr;
