@@ -273,6 +273,15 @@ class Ast
             return new AstNode.FunctionNode(identifier, anonFn);
         }
         
+        return parseReturn();
+    }
+
+    AstNode parseReturn() {
+        if (match(TokenType.RETURN)) {
+            AstNode expr = parseExpr();
+            return new AstNode.ReturnNode(expr);
+        }
+        
         return parseBlock();
     }
 

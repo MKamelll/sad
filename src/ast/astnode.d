@@ -338,6 +338,27 @@ abstract class AstNode {
         }
     }
 
+    static class ReturnNode : AstNode
+    {
+        private AstNode mExpr;
+
+        this (AstNode expr) {
+            mExpr = expr;
+        }
+
+        AstNode getExpr() {
+            return mExpr;
+        }
+
+        override string toString() {
+            return "Return(expr: " ~ mExpr.toString() ~ ")";
+        }
+
+        override void accept(Visitor v) {
+            v.visit(this);
+        }
+    }
+
     static class IfNode : AstNode
     {
         private AstNode mCondition;
