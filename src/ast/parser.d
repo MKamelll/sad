@@ -198,6 +198,8 @@ class Ast
     AstNode parseParen() {
         if (match(TokenType.LEFT_PAREN)) {
             AstNode[] paren = [];
+            if (match(TokenType.RIGHT_PAREN)) return new AstNode.ParanNode(paren);
+            
             paren ~= parseExpr();
             while (match(TokenType.COMMA)) {
                 paren ~= parseExpr(); 

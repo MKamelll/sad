@@ -5,3 +5,10 @@ fn fac(n: int, result: int): int {
 
     return fac(n - 1, n * result);
 }
+
+fn main(): int {
+    let i: int = 15;
+    let x: int = 5;
+    writeln(fac(i - x, 1));
+    return 0;
+}

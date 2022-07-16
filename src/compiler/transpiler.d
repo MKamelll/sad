@@ -14,6 +14,7 @@ class Transpiler : Visitor
     private int mCurrIndex;
     private int mCurrIndentationLevel;
     private string mStdImports;
+    private int mCurrCallDepth;
 
     this (AstNode[] subtrees) {
         mSubtrees = subtrees;
@@ -21,6 +22,7 @@ class Transpiler : Visitor
         mCurrIndex = 0;
         mCurrIndentationLevel = 0;
         mStdImports = "";
+        mCurrCallDepth = 0;
     }
 
     override string toString() {
@@ -101,6 +103,16 @@ class Transpiler : Visitor
         return this;
     }
 
+    private Transpiler incCurrentCallDepth() {
+        mCurrCallDepth++;
+        return this;
+    }
+
+    private Transpiler decCurrentCallDepth() {
+        mCurrCallDepth--;
+        return this;
+    }
+
     private Transpiler addImport(string mod) {
         append("import").space();
         append(mod).semiColon().eol();
@@ -174,6 +186,7 @@ class Transpiler : Visitor
         {
             indent();
             n.accept(this);
+            eol();
         }
         decCurrentIndentationLevel();
         eol().indent().append("}").eol();
@@ -330,6 +343,7 @@ class Transpiler : Visitor
     }
 
     void visit(AstNode.CallNode node) {
+        incCurrentCallDepth();
         if (AstNode.IdentifierNode id = cast(AstNode.IdentifierNode) node.getIdentifier()) {
             append(id.getValueStr());
             append("(");
@@ -345,7 +359,8 @@ class Transpiler : Visitor
             }
             stripTrailingSemicolon();
             append(")");
-            semiColon();
+            if (mCurrCallDepth < 2) semiColon();
+            decCurrentCallDepth();
         } else {
             throw new TranspilerError("Expected an identifier for the function call");
         }
