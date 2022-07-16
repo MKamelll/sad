@@ -322,4 +322,10 @@ class Transpiler : Visitor
         }
         node.getAnonymousStruct().accept(this);
     }
+
+    void visit(AstNode.ReturnNode node) {
+        append("return").space();
+        node.getExpr().accept(this);
+        semiColon();
+    }
 }

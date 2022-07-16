@@ -22,4 +22,5 @@ interface Visitor
     void visit(AstNode.AnonymousStruct node);
     void visit(AstNode.StructNode node);
     void visit(AstNode.FunctionNode node);
+    void visit(AstNode.ReturnNode node);
 }
