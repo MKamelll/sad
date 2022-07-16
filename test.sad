@@ -1,7 +1,7 @@
 fn fac(n: int, result: int): int {
     if n < 2 {
         return result;
-    };
+    }
 
     return fac(n - 1, n * result);
 }

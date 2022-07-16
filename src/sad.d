@@ -16,7 +16,6 @@ void run(string src) {
     auto ast = new Ast(lexer);
     auto transpiler = new Transpiler(ast.parse());
     writeln(transpiler.generate());
-    //writeln(ast.parse());
 }
 
 void generateDFile(string src, string fileName) {

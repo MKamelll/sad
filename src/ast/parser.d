@@ -277,7 +277,9 @@ class Ast
             if (match(TokenType.RIGHT_BRACKET)) return new AstNode.BlockNode(result);
 
             result ~= parseExpr();
-            while (match(TokenType.SEMICOLON) && !match(TokenType.RIGHT_BRACKET)) {
+            while ((match(TokenType.SEMICOLON) || checkPrevious(TokenType.RIGHT_BRACKET))
+                    && !match(TokenType.RIGHT_BRACKET))
+            {
                 result ~= parseExpr();
             }
 
@@ -292,7 +294,8 @@ class Ast
             AstNode identifier = parseIdentifier();
             
             if (!match(TokenType.EQ)) 
-                throw expected(TokenType.EQ, "const requires definition not declaration because it's as the name may suggest, a const");
+                throw expected(TokenType.EQ, 
+                    "const requires definition not declaration because it's as the name may suggest, a const");
             
             AstNode rhs = parseExpr();
             
