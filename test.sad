@@ -11,6 +11,7 @@ fn fac(n: int, result: int): int {
 fn main(): int {
     let i: int = 15;
     let x: int = 5;
-    writeln(fac(i - x, 1));
+    let s: string = "Hello";
+    writeln(s);
     return 0;
 }
