@@ -15,7 +15,7 @@ enum TokenType {
     IDENTIFIER = "IDENTIFIER", COMMA = ",", LET = "LET", CONST = "CONST", EQ = "=", EQ_EQ = "==", BANG = "!",
     BANG_EQ = "!=", GREATER_EQ = ">=", LESS_EQ = "<=", LESS = "<", GREATER = ">",
     FN = "FN", STRUCT = "STRUCT" , RETURN = "RETURN", FOR = "FOR", WHILE = "WHILE", IF = "IF", ELIF = "ELIF", ELSE = "ELSE",
-    RANGE = "..", STRING = "STRING", COLON = ":", EOF = "EOF"
+    RANGE = "..", STRING = "STRING", COLON = ":", IMPORT = "IMPORT", EOF = "EOF"
 }
 
 class Token {
@@ -241,6 +241,8 @@ class Tokenizer {
                         return new Token(TokenType.FN, Variant(ident));
                     } else if (ident == "struct") {
                         return new Token(TokenType.STRUCT, Variant(ident));
+                    } else if (ident == "import") {
+                        return new Token(TokenType.IMPORT, Variant(ident));
                     }
 
                     return new Token(TokenType.IDENTIFIER, Variant(ident));

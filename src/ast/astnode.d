@@ -35,6 +35,21 @@ abstract class AstNode {
 
     }
 
+    static class StringNode : PrimaryNode
+    {
+        this (Variant val) {
+            super(val);
+        }
+
+        override string toString() {
+            return "String(" ~ mVal.toString() ~ ")";
+        }
+
+        override void accept(Visitor v) {
+            v.visit(this);
+        }
+    }
+
     static class NumberNode : PrimaryNode
     {
         this(Variant val) {
@@ -558,6 +573,27 @@ abstract class AstNode {
         override string toString() {
             return "Struct(identifier: " ~ mIdentifier.toString()
                 ~ ", anonymousStruct: " ~ mAnonymousStruct.toString() ~ ")";
+        }
+
+        override void accept(Visitor v) {
+            v.visit(this);
+        }
+    }
+
+    static class ImportNode : AstNode
+    {
+        AstNode mImport;
+
+        this (AstNode mod) {
+            mImport = mod;
+        }
+
+        AstNode getImport() {
+            return mImport;
+        }
+
+        override string toString() {
+            return "import(" ~ mImport.toString() ~ ")";
         }
 
         override void accept(Visitor v) {

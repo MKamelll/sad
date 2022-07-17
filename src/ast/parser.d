@@ -175,6 +175,14 @@ class Ast
             
             return new AstNode.IdentifierNode(identifier.getLexeme());
         }
+
+        return parseString();
+    }
+
+    AstNode parseString() {
+        if (match(TokenType.STRING)) {
+            return new AstNode.StringNode(previous().getLexeme());
+        }
         
         return parsePrefix();
     }
@@ -400,7 +408,15 @@ class Ast
             return new AstNode.AnonymousStruct(block);
         }
         
-        throw new ParseError("Expected a primary instead got '" ~ mCurrToken.getLexeme().toString() ~ "'");     
+        return parseImport();
     }
 
+    AstNode parseImport() {
+        if (match(TokenType.IMPORT)) {
+            AstNode node = parseString();
+            return new AstNode.ImportNode(node);
+        }
+        
+        throw new ParseError("Expected a primary instead got '" ~ mCurrToken.getLexeme().toString() ~ "'");     
+    }
 }
