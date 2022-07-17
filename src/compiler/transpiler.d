@@ -365,4 +365,16 @@ class Transpiler : Visitor
             throw new TranspilerError("Expected an identifier for the function call");
         }
     }
+
+    void visit(AstNode.ImportNode node) {
+        if (AstNode.StringNode str = cast(AstNode.StringNode) node.getImport()) {
+           addImport(str.getValueStr());
+        } else {
+            throw new TranspilerError("Expected a module name to import");
+        }
+    }
+
+    void visit(AstNode.StringNode node) {
+        append("\"").append(node.getValueStr()).append("\"");
+    }
 }

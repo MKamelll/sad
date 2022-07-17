@@ -24,4 +24,6 @@ interface Visitor
     void visit(AstNode.FunctionNode node);
     void visit(AstNode.ReturnNode node);
     void visit(AstNode.CallNode node);
+    void visit(AstNode.ImportNode node);
+    void visit(AstNode.StringNode node);
 }
