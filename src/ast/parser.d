@@ -8,6 +8,7 @@ import std.typecons;
 import ast.error;
 import ast.lexer;
 import ast.astnode;
+import general;
 
 enum Assoc {
     LEFT, RIGHT, NONE

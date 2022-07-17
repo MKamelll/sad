@@ -6,6 +6,7 @@ import std.format;
 import std.stdio;
 import std.ascii;
 import std.conv;
+import general;
 
 enum TokenType {
     LEFT_PAREN = "(", RIGHT_PAREN = ")", LEFT_BRACKET = "{", RIGHT_BRACKET = "}",
@@ -207,7 +208,8 @@ class Tokenizer {
                 return new Token(TokenType.COLON, Variant(ident));
             }
       
-            case ' ': case '\t': case '\n': advance(1); return next();
+            case ' ': case '\t': advance(1); return next();
+            case '\n': incCurrLine(); advance(1); return next();
 
             default: {
                 if (isDigit(curr)) {

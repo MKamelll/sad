@@ -5,6 +5,7 @@ import ast.parser;
 import ast.error;
 import error;
 import compiler.transpiler;
+import general;
 
 import std.stdio;
 import std.algorithm;
@@ -19,6 +20,7 @@ void run(string src) {
 }
 
 void generateDFile(string src, string fileName) {
+    setFileName(fileName);
     auto lexer = new Tokenizer(src);
     auto ast = new Ast(lexer);
     auto transpiler = new Transpiler(ast.parse());
