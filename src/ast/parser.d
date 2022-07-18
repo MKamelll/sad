@@ -290,13 +290,9 @@ class Ast
 
             result ~= parseExpr();
             while ((match(TokenType.SEMICOLON) || checkPrevious(TokenType.RIGHT_BRACKET))
-                    && !check(TokenType.RIGHT_BRACKET))
+                    && !check(TokenType.RIGHT_BRACKET) && !isAtEnd())
             {
                 result ~= parseExpr();
-                if (check(TokenType.EOF)) {
-                    setCurrline(currLine);
-                    throw expected(TokenType.RIGHT_BRACKET);    
-                }
             }
 
             if (!match(TokenType.RIGHT_BRACKET)) {
