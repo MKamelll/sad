@@ -284,14 +284,24 @@ class Ast
     AstNode parseBlock() {
 
         if (match(TokenType.LEFT_BRACKET)) {
+            int currLine = getCurrLine();
             AstNode[] result = [];
             if (match(TokenType.RIGHT_BRACKET)) return new AstNode.BlockNode(result);
 
             result ~= parseExpr();
             while ((match(TokenType.SEMICOLON) || checkPrevious(TokenType.RIGHT_BRACKET))
-                    && !match(TokenType.RIGHT_BRACKET))
+                    && !check(TokenType.RIGHT_BRACKET))
             {
                 result ~= parseExpr();
+                if (check(TokenType.EOF)) {
+                    setCurrline(currLine);
+                    throw expected(TokenType.RIGHT_BRACKET);    
+                }
+            }
+
+            if (!match(TokenType.RIGHT_BRACKET)) {
+                setCurrline(currLine);
+                throw expected(TokenType.RIGHT_BRACKET);
             }
 
             return new AstNode.BlockNode(result);
